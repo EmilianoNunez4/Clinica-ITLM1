@@ -1,0 +1,22 @@
+<div class="auth-container">
+  <h1>Acceso</h1>
+
+  <!-- LOGIN -->
+  <section>
+    <h2>Iniciar sesión</h2>
+    <input type="email" [(ngModel)]="loginEmail" placeholder="Correo" />
+    <input type="password" [(ngModel)]="loginPass" placeholder="Contraseña" />
+    <button (click)="login()">Ingresar</button>
+  </section>
+
+  <hr />
+
+  <!-- REGISTRO -->
+  <section>
+    <h2>Registrarse</h2>
+    <input type="text" [(ngModel)]="nombre" placeholder="Nombre" />
+    <input type="email" [(ngModel)]="regEmail" placeholder="Correo" />
+    <input type="password" [(ngModel)]="regPass" placeholder="Contraseña" />
+    <button (click)="registrar()">Crear cuenta</button>
+  </section>
+</div>

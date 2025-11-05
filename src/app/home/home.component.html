@@ -1,0 +1,99 @@
+<div class="home-container">
+  <header class="header">
+    <h1>¡Bienvenido, {{ usuario?.nombre || 'usuario' }}!</h1>
+  </header>
+
+  <main class="content">
+    <h2>Panel de {{ usuario?.rol | titlecase }}</h2>
+
+    <!-- 🔹 ADMIN -->
+    <section *ngIf="usuario?.rol === 'admin'">
+      <h3>Usuarios registrados</h3>
+      <div class="user-list" *ngIf="usuarios.length; else noUsers">
+        <div class="user-card" *ngFor="let u of usuarios; let i = index">
+          <h4>{{ u.nombre }}</h4>
+          <p>{{ u.email }}</p>
+          <p>Rol: {{ u.rol }}</p>
+          <button (click)="cambiarRol(i)">Cambiar rol</button>
+          <button (click)="eliminarUsuario(i)">Eliminar</button>
+        </div>
+      </div>
+      <ng-template #noUsers>
+        <p>No hay usuarios registrados.</p>
+      </ng-template>
+
+      <hr />
+
+      <h3>Gestión de Turnos</h3>
+      <button (click)="generarTurnos()">🟥 GENERAR TURNOS 14 DÍAS</button>
+
+      <div *ngIf="turnos && turnos.length; else noTurnos">
+        <!-- 🔸 Agrupar por fecha -->
+        <div class="dias-container">
+          <div
+            class="dia-card"
+            *ngFor="let fecha of obtenerFechasUnicas()"
+            (click)="toggleFecha(fecha)"
+          >
+            <h4>{{ fecha | date: 'fullDate' }}</h4>
+
+            <div
+              class="turnos-list"
+              *ngIf="fechaSeleccionada === fecha"
+            >
+              <div
+                class="turno-card"
+                *ngFor="let t of obtenerTurnosPorFecha(fecha); let i = index"
+              >
+                <p><strong>Hora:</strong> {{ t.hora }}</p>
+                <p><strong>Especialidad:</strong> {{ t.especialidad }}</p>
+                <p><strong>Estado:</strong> {{ t.estado }}</p>
+
+                <div class="btns-turno">
+                  <button (click)="editarCampo(i, 'hora'); $event.stopPropagation()">⏰</button>
+                  <button (click)="editarCampo(i, 'especialidad'); $event.stopPropagation()">🩺</button>
+                  <button (click)="editarCampo(i, 'estado'); $event.stopPropagation()">🔁</button>
+                  <button (click)="eliminarTurno(i); $event.stopPropagation()">🗑️</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <button class="btn-delete-all" (click)="eliminarTodosTurnos()">
+          🗑️ Eliminar todos los turnos
+        </button>
+      </div>
+
+      <ng-template #noTurnos>
+        <p>No hay turnos generados.</p>
+      </ng-template>
+    </section>
+
+    <!-- 🔹 PACIENTE -->
+    <section *ngIf="usuario?.rol === 'paciente'">
+      <button (click)="irASolicitar()">🩺 Solicitar turno</button>
+
+      <div *ngIf="misTurnos.length; else noMisTurnos">
+        <h3>Mis turnos reservados</h3>
+        <div class="turno-card" *ngFor="let t of misTurnos; let i = index">
+          <h4>{{ t.fecha }} - {{ t.hora }}</h4>
+          <p>{{ t.especialidad }}</p>
+          <button (click)="cancelarTurno(i)">Cancelar</button>
+        </div>
+      </div>
+
+      <ng-template #noMisTurnos>
+        <p>No tenés turnos reservados.</p>
+      </ng-template>
+    </section>
+
+    <!-- 🔹 MÉDICO -->
+    <section *ngIf="usuario?.rol === 'medico'">
+      <p>Aquí podrías agregar la vista específica del médico (por ejemplo, sus turnos asignados).</p>
+    </section>
+
+    <hr />
+    <button (click)="logout()">Cerrar sesión</button>
+  </main>
+</div>
