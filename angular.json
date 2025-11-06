@@ -105,11 +105,9 @@
         }
       }
     }
-<<<<<<< HEAD
+
   },
   "cli": {
     "analytics": false
-=======
->>>>>>> origin/main
   }
 }
