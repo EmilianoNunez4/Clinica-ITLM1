@@ -1,0 +1,53 @@
+<h2>Bienvenido Dr. {{ nombre }}</h2>
+<button (click)="cerrarSesion()">Cerrar Sesión</button>
+
+<hr>
+
+<h3>Turnos Activos</h3>
+<table>
+  <tr>
+    <th>Fecha</th>
+    <th>Hora</th>
+    <th>Paciente</th>
+    <th>Especialidad</th>
+    <th>Estado</th>
+    <th>Acciones</th>
+  </tr>
+  <tr *ngFor="let turno of turnosActivos">
+    <td>{{ turno.fecha }}</td>
+    <td>{{ turno.hora }}</td>
+    <td>{{ turno.nombrePaciente || '-' }}</td>
+    <td>{{ turno.especialidad }}</td>
+    <td>
+      <span class="estado {{ turno.estado }}">{{ turno.estado }}</span>
+    </td>
+    <td>
+      <button (click)="cambiarEstado(turno.id, 'atendido')">Atendido</button>
+      <button (click)="cambiarEstado(turno.id, 'cancelado')">Cancelado</button>
+    </td>
+  </tr>
+</table>
+
+<hr>
+
+<h3>Historial de Atenciones</h3>
+<table>
+  <tr>
+    <th>Fecha</th>
+    <th>Hora</th>
+    <th>Paciente</th>
+    <th>Especialidad</th>
+    <th>Estado</th>
+  </tr>
+  <tr *ngFor="let turno of turnosAtendidos">
+    <td>{{ turno.fecha }}</td>
+    <td>{{ turno.hora }}</td>
+    <td>{{ turno.nombrePaciente || '-' }}</td>
+    <td>{{ turno.especialidad }}</td>
+    <td>
+      <span class="estado {{ turno.estado }}">{{ turno.estado }}</span>
+    </td>
+  </tr>
+</table>
+
+

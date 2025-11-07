@@ -36,40 +36,50 @@ export class AuthComponent {
 
   constructor(private router: Router) {}
 
-  // 🔹 LOGIN
-  async login() {
-    try {
-      const auth = getAuth();
-      const db = getFirestore();
+ // LOGIN
+async login() {
+  try {
+    const auth = getAuth();
+    const db = getFirestore();
 
-      const cred = await signInWithEmailAndPassword(
-        auth,
-        this.loginEmail.trim(),
-        this.loginPass
-      );
+    const cred = await signInWithEmailAndPassword(
+      auth,
+      this.loginEmail.trim(),
+      this.loginPass
+    );
 
-      const userRef = doc(db, 'usuarios', cred.user.uid);
-      const snap = await getDoc(userRef);
+    const userRef = doc(db, 'usuarios', cred.user.uid);
+    const snap = await getDoc(userRef);
 
-      if (!snap.exists()) {
-        alert('Usuario no encontrado en base de datos');
-        return;
-      }
-
-      const userData = snap.data() as Usuario;
-
-      // Guardar usuario actual localmente
-      localStorage.setItem('usuarioActual', JSON.stringify(userData));
-
-      alert(`Bienvenido ${userData.nombre}`);
-      this.router.navigate(['/home']);
-    } catch (err: any) {
-      console.error('❌ Error al iniciar sesión:', err);
-      alert('Error al iniciar sesión: ' + err.message);
+    if (!snap.exists()) {
+      alert('Usuario no encontrado en base de datos');
+      return;
     }
-  }
 
-  // 🔹 REGISTRO
+    const userData = snap.data() as Usuario;
+
+    // Guardar usuario actual localmente
+    localStorage.setItem('usuarioActual', JSON.stringify(userData));
+
+    alert(`Bienvenido ${userData.nombre}`);
+
+    // Redirección según rol
+    if (userData.rol === 'medico') {
+      this.router.navigate(['/medico']);
+    } else if (userData.rol === 'admin') {
+      this.router.navigate(['/admin']);
+    } else {
+      // paciente por defecto
+      this.router.navigate(['/home']);
+    }
+
+  } catch (err: any) {
+    console.error('❌ Error al iniciar sesión:', err);
+    alert('Error al iniciar sesión: ' + err.message);
+  }
+}
+
+  // REGISTRO
   async registrar() {
     if (!this.nombre || !this.regEmail || !this.regPass) {
       alert('Completar todos los campos');

@@ -8,6 +8,7 @@ import { HomeComponent } from './home/home.component';
 import { SolicitarComponent } from './turnos/solicitar/solicitar.component';
 
 
+
 // nuevo es la importacion de firebase
 import { provideFirebaseApp, initializeApp } from '@angular/fire/app';
 import { provideAuth, getAuth } from '@angular/fire/auth';
@@ -15,13 +16,15 @@ import { provideFirestore, getFirestore } from '@angular/fire/firestore';
 import { provideStorage, getStorage } from '@angular/fire/storage';
 
 import { environment } from '../environments/environment';
+import { MedicoComponent } from './medico/medico.component';
 
 @NgModule({
   declarations: [
     AppComponent,
     AuthComponent,
     HomeComponent,
-    SolicitarComponent
+    SolicitarComponent,
+    MedicoComponent
   ],
   imports: [
     BrowserModule,
