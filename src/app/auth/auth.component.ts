@@ -101,7 +101,7 @@ async registrar() {
     alert('Completar todos los campos');
     return;
   }
-
+  
   const emailRegex =
     /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 
@@ -137,8 +137,8 @@ async registrar() {
     alert('Error al registrar: ' + err.message);
   }
 
-  const emailRegex =
-    /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+if (!/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(this.regEmail)) {
+
 
   if (!emailRegex.test(this.regEmail)) {
     console.log('Valor de email ingresado:', this.regEmail);
