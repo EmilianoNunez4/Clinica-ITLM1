@@ -34,7 +34,7 @@ constructor(private firestore: Firestore, private router: Router) {}
     const auth = getAuth();
     const db = getFirestore();
 
-// este ollente Escucha si hay un usuario logueado actualmente. para ver si hay alguien activo o no
+// este oyente Escucha si hay un usuario logueado actualmente. para ver si hay alguien activo o no
     onAuthStateChanged(auth, async (user) => {
 // si no esta autenticado lo manda al login
       if (!user) {
@@ -46,7 +46,6 @@ constructor(private firestore: Firestore, private router: Router) {}
       const userRef = doc(db, 'usuarios', user.uid);
       const userSnap = await getDoc(userRef);
       if (!userSnap.exists()) {
-        alert('No se encontró tu usuario en la base de datos.');
         signOut(auth);
         this.router.navigate(['/auth']);
         return;
@@ -81,25 +80,25 @@ async cambiarRol(index: number) {
   const order = ['paciente', 'medico', 'admin'];
   const u = this.usuarios[index];
 
-  // 🧩 Validar que exista el usuario
+  // Validar que exista el usuario
   if (!u) {
     console.error('⚠️ Usuario no encontrado en el índice:', index);
     alert('Error: Usuario no encontrado.');
     return;
   }
 
-  // 🧩 Validar que tenga rol (si no, asignar paciente)
+  // Validar que tenga rol (si no, asignar paciente)
   if (!u.rol || !order.includes(u.rol)) {
     console.warn('⚠️ Usuario sin rol válido, asignando "paciente":', u);
     u.rol = 'paciente';
   }
 
-  // 🔹 Calcular el siguiente rol en el orden
+  // Calcular el siguiente rol en el orden
   const currentRol = u.rol || 'paciente';
   const currentIdx = order.indexOf(currentRol);
 
   if (currentIdx === -1) {
-    console.error('❌ Rol desconocido:', currentRol, 'en usuario:', u);
+    console.error(' Rol desconocido:', currentRol, 'en usuario:', u);
     alert('Rol desconocido, no se puede cambiar.');
     return;
   }
@@ -107,7 +106,7 @@ async cambiarRol(index: number) {
   const nextIdx = (currentIdx + 1) % order.length;
   const nextRol = order[nextIdx];
 
-  // ⚠️ Evitar eliminar el último admin
+  // Evitar eliminar el último admin
   if (
     currentRol === 'admin' &&
     nextRol !== 'admin' &&
@@ -117,7 +116,7 @@ async cambiarRol(index: number) {
     return;
   }
 
-  // 🔁 Actualizar en memoria
+  // Actualizar en memoria
   u.rol = nextRol;
   this.usuarios[index] = u;
 
@@ -125,65 +124,107 @@ async cambiarRol(index: number) {
     const userRef = doc(this.firestore, 'usuarios', u.uid);
     await updateDoc(userRef, { rol: nextRol });
 
-    // 🔄 Si el usuario logueado es el mismo, actualizar localStorage
+    // Si el usuario logueado es el mismo, actualizar localStorage
     if (this.usuario?.uid === u.uid) {
       this.usuario.rol = nextRol;
       localStorage.setItem('usuarioActual', JSON.stringify(this.usuario));
     }
 
-    console.log(`✅ Rol de ${u.email} cambiado a "${nextRol}"`);
+    console.log(`Rol de ${u.email} cambiado a "${nextRol}"`);
     alert(`Rol cambiado a "${nextRol}"`);
   } catch (error) {
-    console.error('❌ Error al cambiar rol:', error);
+    console.error('Error al cambiar rol:', error);
     alert('Error al cambiar rol. Revisá la consola.');
   }
 }
 
-// ELIMINAR USUARIO
-async eliminarUsuario(index: number) {
-  // Validaciones básicas
+// DAR DE BAJA USUARIO (sin eliminarlo de la base)
+async darBaja(index: number) {
   const u = this.usuarios[index];
+
+  // 🔹 Validar usuario existente
   if (!u) {
     console.error('Usuario no encontrado en el índice', index);
     alert('Error: usuario no encontrado.');
     return;
   }
 
-  if (!confirm(`¿Seguro que querés eliminar a ${u.nombre || u.email}? Esta acción es irreversible.`)) {
+  if (!confirm(`¿Seguro que querés dar de baja a ${u.nombre || u.email}?`)) {
     return;
   }
 
   try {
-    // Primero intentar obtener el id/uid del documento
     const docId = u.uid || u.id;
+
     if (!docId) {
-      // Si no existe uid/id, avisar y sólo remover del arreglo local
-      console.warn('Usuario sin uid/id en Firestore, se eliminará sólo localmente:', u);
-      this.usuarios.splice(index, 1);
-      alert(`${u.nombre || u.email} eliminado localmente (no había id en Firestore).`);
+      console.warn('Usuario sin uid/id en Firestore, no se puede actualizar:', u);
+      alert('No se encontró el ID del usuario en la base de datos.');
       return;
     }
 
-    // Eliminar del arreglo local (actualiza UI inmediatamente)
-    this.usuarios.splice(index, 1);
-
-    // Eliminar el doc en Firestore usando la instancia inyectada
     const userRef = doc(this.firestore, 'usuarios', docId);
-    await deleteDoc(userRef);
 
-    // Si eliminaste al usuario que está logueado, cerrá sesión y redirigí
+    // 🔹 En lugar de eliminar, solo marcamos como inactivo
+    await updateDoc(userRef, { activo: false, estado: 'inactivo' });
+
+    // 🔹 Actualizamos el array local
+    this.usuarios[index] = { ...u, activo: false, estado: 'inactivo' };
+
+    // 🔹 Si es el usuario logueado, cerramos sesión
     if (this.usuario?.uid === docId) {
       await signOut(getAuth());
       localStorage.removeItem('usuarioActual');
       this.router.navigate(['/auth']);
+      alert('Tu cuenta fue dada de baja. Cerrando sesión...');
+    } else {
+      alert(`${u.nombre || u.email} fue dado de baja correctamente.`);
     }
 
-    alert(`${u.nombre || u.email} eliminado correctamente.`);
   } catch (err) {
-    console.error('Error al eliminar usuario:', err);
-    alert('Ocurrió un error al eliminar el usuario. Revisa la consola.');
+    console.error('❌ Error al dar de baja usuario:', err);
+    alert('Ocurrió un error al dar de baja al usuario. Revisa la consola.');
   }
 }
+
+// REACTIVAR USUARIO (volver a activar un usuario dado de baja)
+async reactivarUsuario(index: number) {
+  const u = this.usuarios[index];
+
+  // 🔹 Validar usuario existente
+  if (!u) {
+    console.error('Usuario no encontrado en el índice', index);
+    alert('Error: usuario no encontrado.');
+    return;
+  }
+
+  if (!confirm(`¿Seguro que querés reactivar a ${u.nombre || u.email}?`)) {
+    return;
+  }
+
+  try {
+    const docId = u.uid || u.id;
+
+    if (!docId) {
+      console.warn('Usuario sin uid/id en Firestore, no se puede actualizar:', u);
+      alert('No se encontró el ID del usuario en la base de datos.');
+      return;
+    }
+
+    const userRef = doc(this.firestore, 'usuarios', docId);
+
+    // 🔹 Actualizamos en Firestore
+    await updateDoc(userRef, { activo: true, estado: 'activo' });
+
+    // 🔹 Actualizamos localmente para reflejar el cambio en pantalla
+    this.usuarios[index] = { ...u, activo: true, estado: 'activo' };
+
+    alert(`${u.nombre || u.email} fue reactivado correctamente.`);
+  } catch (err) {
+    console.error('❌ Error al reactivar usuario:', err);
+    alert('Ocurrió un error al reactivar el usuario. Revisá la consola.');
+  }
+}
+
 
   // GENERAR TURNOS (6 por día, 14 días, lunes a viernes, hay que acomodarlo, porque genere los 14 dias de seguidos, no saltea 2 que serian los fines de semana)
 async generarTurnos() {
@@ -210,7 +251,7 @@ async generarTurnos() {
   }
 
   this.turnos = turnos;
-  console.log("✅ Turnos generados:", this.turnos);
+  console.log(" Turnos generados:", this.turnos);
 
   // Guardar turnos en Firebase
   const turnosRef = collection(this.firestore, 'turnos');
@@ -219,9 +260,9 @@ async generarTurnos() {
     for (const turno of this.turnos) {
       await addDoc(turnosRef, turno);
     }
-    console.log("✅ Turnos guardados en Firestore");
+    console.log(" Turnos guardados en Firestore");
   } catch (error) {
-    console.error("❌ Error al guardar los turnos:", error);
+    console.error(" Error al guardar los turnos:", error);
   }
 }
 
@@ -272,29 +313,6 @@ async generarTurnos() {
       const turnoRef = doc(db, 'turnos', t.id!);
       await updateDoc(turnoRef, { [campo]: nuevoValor });
       alert(`✅ ${campo} del turno actualizado`);
-    }
-  }
-
-  async eliminarTurno(index: number) {
-    const db = getFirestore();
-    const t = this.turnos[index];
-    if (confirm(`¿Seguro que querés eliminar el turno de ${t.fecha} a las ${t.hora}?`)) {
-      this.turnos.splice(index, 1);
-      const turnoRef = doc(db, 'turnos', t.id!);
-      await deleteDoc(turnoRef);
-      alert('Turno eliminado');
-    }
-  }
-
-  async eliminarTodosTurnos() {
-    const db = getFirestore();
-    if (confirm('¿Eliminar TODOS los turnos?')) {
-      const turnosSnap = await getDocs(collection(db, 'turnos'));
-      for (const d of turnosSnap.docs) {
-        await deleteDoc(d.ref);
-      }
-      this.turnos = [];
-      alert('🗑️ Todos los turnos eliminados');
     }
   }
 

@@ -16,7 +16,8 @@
           <p>{{ u.email }}</p>
           <p>Rol: {{ u.rol }}</p>
           <button (click)="cambiarRol(i)">Cambiar rol</button>
-          <button (click)="eliminarUsuario(i)">Eliminar</button>
+          <button (click)="darBaja(i)">Dar de baja</button>
+          <button *ngIf="u.activo === false" (click)="reactivarUsuario(i)">Reactivar</button>
         </div>
       </div>
       <ng-template #noUsers>
@@ -54,16 +55,12 @@
                   <button (click)="editarCampo(i, 'hora'); $event.stopPropagation()">⏰</button>
                   <button (click)="editarCampo(i, 'especialidad'); $event.stopPropagation()">🩺</button>
                   <button (click)="editarCampo(i, 'estado'); $event.stopPropagation()">🔁</button>
-                  <button (click)="eliminarTurno(i); $event.stopPropagation()">🗑️</button>
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        <button class="btn-delete-all" (click)="eliminarTodosTurnos()">
-          🗑️ Eliminar todos los turnos
-        </button>
       </div>
 
       <ng-template #noTurnos>

@@ -4,6 +4,7 @@ import {
   getAuth,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
+  signOut, 
 } from 'firebase/auth';
 import {
   getFirestore,
@@ -20,6 +21,8 @@ interface Usuario {
   email: string;
   rol: string;
   fechaRegistro?: string;
+  activo?: boolean;  
+  estado?: string;    
 }
 
 @Component({
@@ -57,6 +60,13 @@ async login() {
     }
 
     const userData = snap.data() as Usuario;
+
+    // ✅ Validación: no permitir inicio si el usuario está inactivo o dado de baja
+    if (userData.activo === false || userData.estado === 'inactivo') {
+      alert('Tu cuenta fue dada de baja. Contactá al administrador.');
+      await signOut(auth);
+      return;
+    }
 
     // Guardar usuario actual localmente
     localStorage.setItem('usuarioActual', JSON.stringify(userData));
