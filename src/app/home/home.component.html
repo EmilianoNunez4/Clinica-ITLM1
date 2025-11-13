@@ -26,7 +26,11 @@
       <hr />
 
       <h3>Gestión de Turnos</h3>
-      <button (click)="generarTurnos()">🟥 GENERAR TURNOS 14 DÍAS</button>
+      <div class="admin-turnos-actions">
+        <button (click)="generarTurnosPorEspecialidad()">🟥 GENERAR TURNOS POR ESPECIALIDAD</button>
+        <!-- Botón para reparar turnos que no tengan uidMedico asignado -->
+        <button (click)="repararTurnosSinMedico()">🔧 REPARAR TURNOS (asignar uidMedico)</button>
+      </div>
 
       <div *ngIf="turnos && turnos.length; else noTurnos">
         <!-- 🔸 Agrupar por fecha -->
@@ -49,6 +53,7 @@
                 <p><strong>Hora:</strong> {{ t.hora }}</p>
                 <p><strong>Especialidad:</strong> {{ t.especialidad }}</p>
                 <p><strong>Estado:</strong> {{ t.estado }}</p>
+                <p *ngIf="t.uidMedico"><strong>Asignado a UID:</strong> {{ t.uidMedico }}</p>
 
                 <div class="btns-turno">
                   <button (click)="editarCampo(i, 'hora'); $event.stopPropagation()">⏰</button>
@@ -98,3 +103,4 @@
     <button (click)="logout()">Cerrar sesión</button>
   </main>
 </div>
+
