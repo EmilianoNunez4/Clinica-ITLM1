@@ -23,6 +23,7 @@ interface Turno {
   especialidad: string;
   estado: string;
   paciente?: string | null;
+  uidMedico?: string;
 }
 
 @Component({
@@ -46,7 +47,6 @@ export class HomeComponent implements OnInit {
   // 🔹 INICIO
   async ngOnInit() {
     const auth = getAuth();
-    const db = getFirestore();
 
     onAuthStateChanged(auth, async (user) => {
       if (!user) {
@@ -61,6 +61,7 @@ export class HomeComponent implements OnInit {
         this.router.navigate(['/auth']);
         return;
       }
+      this.usuario = userData;
 
       this.usuario = userSnap.data();
 
@@ -285,6 +286,8 @@ async editarCampo(index: number, campo: keyof Turno) {
   obtenerTurnosPorFecha(fecha: string, turnos: Turno[]): Turno[] {
     return turnos.filter(t => t.fecha === fecha).sort((a, b) => a.hora.localeCompare(b.hora));
   }
+}
+
 
   toggleFecha(fecha: string) {
     this.fechaSeleccionada = this.fechaSeleccionada === fecha ? null : fecha;

@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { getFirestore, collection, getDocs, doc, updateDoc } from 'firebase/firestore';
+import { getFirestore, collection, getDocs, doc, updateDoc, query, where } from 'firebase/firestore';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 
 @Component({
@@ -71,14 +71,33 @@ export class SolicitarComponent implements OnInit {
 
     try {
       const turnoRef = doc(db, 'turnos', turno.id);
-      await updateDoc(turnoRef, {
-        estado: 'reservado',
-        paciente: this.usuario.nombre
-      });
+      // Si el turno no tiene uidMedico asignado (datos históricos o generación defectuosa),
+      // asignamos uno ahora basándonos en la especialidad y una rotación simple.
+      let uidMedicoToAssign = turno.uidMedico || null;
+      if (!uidMedicoToAssign) {
+        // obtener todos los médicos y filtrar por especialidad (case/diacritics-insensitive)
+        const medicosSnap = await getDocs(query(collection(db, 'usuarios'), where('rol', '==', 'medico')));
+        const medicosAll = medicosSnap.docs.map(d => ({ uid: d.id, ...(d.data() as any) }));
+        const normalize = (s: string) => s?.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase().trim();
+        const medicos = medicosAll.filter(m => normalize(m.especialidad || '') === normalize(turno.especialidad || ''));
+
+        if (medicos.length > 0) {
+          const horarios = ["09:00", "10:30", "12:00", "13:30", "15:00", "16:30"];
+          const dayIndex = Math.floor(new Date(turno.fecha).getTime() / 86400000);
+          const slotIndex = Math.max(0, horarios.indexOf(turno.hora));
+          const chosen = medicos[(dayIndex + slotIndex) % medicos.length];
+          uidMedicoToAssign = chosen.uid;
+        }
+      }
+
+      const updatePayload: any = { estado: 'reservado', paciente: this.usuario.nombre };
+      if (uidMedicoToAssign) updatePayload.uidMedico = uidMedicoToAssign;
+
+      await updateDoc(turnoRef, updatePayload);
 
       // Actualizar local
       this.turnos = this.turnos.map((t) =>
-        t.id === turno.id ? { ...t, estado: 'reservado', paciente: this.usuario.nombre } : t
+        t.id === turno.id ? { ...t, estado: 'reservado', paciente: this.usuario.nombre, uidMedico: uidMedicoToAssign || t.uidMedico } : t
       );
       this.filtrados = this.turnos.filter((t) => t.estado === 'disponible');
       this.misTurnos = this.turnos.filter((t) => t.paciente === this.usuario.nombre);
