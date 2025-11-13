@@ -136,6 +136,43 @@ async registrar() {
     console.error('Error al registrar usuario:', err);
     alert('Error al registrar: ' + err.message);
   }
+
+  const emailRegex =
+    /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+
+  if (!emailRegex.test(this.regEmail)) {
+    console.log('Valor de email ingresado:', this.regEmail);
+    alert('Por favor, ingresá un correo electrónico válido');
+    return;
+  }
+
+  try {
+    const auth = getAuth();
+    const db = getFirestore();
+
+    const cred = await createUserWithEmailAndPassword(auth, this.regEmail, this.regPass);
+    console.log('Usuario creado en Auth:', cred.user.uid);
+
+    const allUsersSnap = await getDocs(collection(db, 'usuarios'));
+    const rol = allUsersSnap.empty ? 'admin' : 'paciente';
+
+    const nuevoUsuario = {
+      uid: cred.user.uid,
+      nombre: this.nombre,
+      email: this.regEmail,
+      rol,
+      fechaRegistro: new Date().toISOString()
+    };
+
+    await setDoc(doc(db, 'usuarios', cred.user.uid), nuevoUsuario);
+    alert('Usuario registrado con éxito');
+    this.router.navigate(['/home']);
+  } catch (err: any) {
+    console.error('Error al registrar usuario:', err);
+    alert('Error al registrar: ' + err.message);
+  }
+}
+
 }
 
 }
