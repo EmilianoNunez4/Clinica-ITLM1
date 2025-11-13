@@ -1,22 +1,85 @@
-<div class="auth-container">
-  <h1>Acceso</h1>
+<div class="login-container">
 
-  <!-- LOGIN -->
-  <section>
-    <h2>Iniciar sesión</h2>
-    <input type="email" [(ngModel)]="loginEmail" placeholder="Correo" />
-    <input type="password" [(ngModel)]="loginPass" placeholder="Contraseña" />
-    <button (click)="login()">Ingresar</button>
-  </section>
+  <!-- LADO IZQUIERDO -->
+  <div class="login-left">
+    <div class="logo">
+      <h1 class="titulo">Clinica ITLM</h1>
+    </div>
 
-  <hr />
+    <h2>{{ isRegister ? 'Crear cuenta' : 'Bienvenido nuevamente' }}</h2>
+    <p>{{ isRegister ? 'Completa tus datos para registrarte' : 'Porfavor, ingresa tus datos para iniciar sesion' }}</p>
 
-  <!-- REGISTRO -->
-  <section>
-    <h2>Registrarse</h2>
-    <input type="text" [(ngModel)]="nombre" placeholder="Nombre" />
-    <input type="email" [(ngModel)]="regEmail" placeholder="Correo" />
-    <input type="password" [(ngModel)]="regPass" placeholder="Contraseña" />
-    <button type="button" (click)="registrar()">Registrarse</button>
-  </section>
+    <!-- FORM LOGIN -->
+    <form *ngIf="!isRegister" (ngSubmit)="login()" class="login-form">
+
+      <label>Email</label>
+      <input type="email"
+             [(ngModel)]="loginEmail"
+             name="loginEmail"
+             required />
+
+      <label>Contraseña</label>
+      <input type="password"
+             [(ngModel)]="loginPass"
+             name="loginPass"
+             required />
+
+      <div class="options">
+        <a href="#">Cambiar contraseña</a>
+      </div>
+
+      <button type="submit" class="btn-login">Iniciar sesión</button>
+
+      <button type="button" class="btn-google">
+        <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" />
+        Iniciar sesión con Google
+      </button>
+
+      <p class="register-text">
+        ¿No tienes cuenta?
+      <a (click)="toggleRegister()" style="cursor: pointer">Registrarse</a>
+      </p>
+    </form>
+
+    <!-- FORM REGISTRO -->
+    <form *ngIf="isRegister" (ngSubmit)="registrarUsuario()" class="login-form">
+
+      <label>Nombre</label>
+      <input type="text"
+             [(ngModel)]="registerName"
+             name="registerName"
+             required />
+
+      <label>Email</label>
+      <input type="email"
+             [(ngModel)]="registerEmail"
+             name="registerEmail"
+             required />
+
+      <label>Contraseña</label>
+      <input type="password"
+             [(ngModel)]="registerPass"
+             name="registerPass"
+             required />
+
+      <button type="submit" class="btn-login">Crear cuenta</button>
+
+      <p class="register-text">
+        ¿Ya tienes una cuenta?
+        <a href="#" (click)="toggleRegister()">Iniciar sesión</a>
+      </p>
+    </form>
+  </div>
+
+  <!-- LADO DERECHO -->
+  <div class="right-section">
+    <img src="assets/clinica.webp" alt="Imagen Login" />
+
+  <div class="img-text">
+    <h2>Tu salud, nuestra prioridad</h2>
+    <p>Clinica ITLM, atención profesional y personalizada a toda hora en todo momento</p>
+  </div>
+
+  </div>
+
 </div>
