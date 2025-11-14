@@ -1,3 +1,4 @@
+  <app-navbar></app-navbar>
 <div class="home-container">
   <header class="header">
     <h1>¡Bienvenido, {{ usuario?.nombre || 'usuario' }}!</h1>
@@ -73,6 +74,7 @@
 
     <!-- 🔹 PACIENTE -->
     <section *ngIf="usuario?.rol === 'paciente'">
+    
       <button (click)="irASolicitar()">🩺 Solicitar turno</button>
 
       <div *ngIf="misTurnos.length; else noMisTurnos">
@@ -98,3 +100,4 @@
     <button (click)="logout()">Cerrar sesión</button>
   </main>
 </div>
+<app-footer></app-footer>
