@@ -13,6 +13,8 @@ import {
   collection,
   getDocs,
 } from 'firebase/firestore';
+import Swal from 'sweetalert2';
+
 
 interface Usuario {
   uid: string;
@@ -74,7 +76,17 @@ export class AuthComponent {
       const snap = await getDoc(ref);
 
       if (!snap.exists()) {
-        alert('Usuario no encontrado en base de datos');
+        if (!snap.exists()) {
+          await Swal.fire({
+            icon: 'error',
+            title: 'Usuario no encontrado',
+            text: 'No encontramos tu cuenta en nuestra base de datos.',
+            confirmButtonText: 'Entendido',
+            confirmButtonColor: '#b00020',
+            background: '#f7f7f7',
+          });
+          return;
+        }
         return;
       }
 
@@ -82,7 +94,13 @@ export class AuthComponent {
 
       localStorage.setItem('usuarioActual', JSON.stringify(user));
 
-      alert(`Bienvenido ${user.nombre}`);
+      await Swal.fire({
+        icon: 'success',
+        title: '¡Bienvenido!',
+        text: `Hola ${user.nombre}, nos alegra tenerte de vuelta 💙`,
+        confirmButtonColor: '#00509e',
+      });
+
 
       if (user.rol === 'medico') {
         this.router.navigate(['/medico']);
@@ -91,7 +109,14 @@ export class AuthComponent {
       }
 
     } catch (err: any) {
-      alert('Error al iniciar sesión: ' + err.message);
+        await Swal.fire({
+          icon: 'error',
+          title: 'Error al iniciar sesión',
+          text:'Verificá tu correo y contraseña.',
+          confirmButtonText: 'Reintentar',
+          confirmButtonColor: '#b00020',
+          background: '#f7f7f7',
+        });
     }
   }
 
@@ -104,14 +129,24 @@ export class AuthComponent {
     this.registerName = this.registerName.trim();
 
     if (!this.registerName || !this.registerEmail || !this.registerPass) {
-      alert('Completar todos los campos');
+      await Swal.fire({
+        icon: 'warning',
+        title: 'Campos incompletos',
+        text: 'Por favor, completa todos los campos.',
+        confirmButtonColor: '#ff9800',
+      });
       return;
     }
 
     const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 
     if (!emailRegex.test(this.registerEmail)) {
-      alert('Correo electrónico inválido');
+      await Swal.fire({
+        icon: 'warning',
+        title: 'Correo no válido',
+        text: 'Ingresá un correo electrónico válido.',
+        confirmButtonColor: '#ff9800',
+      });
       return;
     }
 
@@ -138,11 +173,21 @@ export class AuthComponent {
 
       await setDoc(doc(db, 'usuarios', cred.user.uid), nuevoUsuario);
 
-      alert('Usuario registrado con éxito');
+      await Swal.fire({
+        icon: 'success',
+        title: '¡Registro completado!',
+        text: 'Tu cuenta fue creada con éxito. Bienvenido a la Clínica ITLM.',
+        confirmButtonColor: '#00509e',
+      });
       this.router.navigate(['/home']);
 
     } catch (err: any) {
-      alert('Error al registrar: ' + err.message);
+      await Swal.fire({
+        icon: 'error',
+        title: 'Error al registrarse',
+        text: err.message || 'Ocurrió un problema.',
+        confirmButtonColor: '#b00020',
+      });
     }
   }
 }
