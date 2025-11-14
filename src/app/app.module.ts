@@ -17,6 +17,7 @@ import { provideStorage, getStorage } from '@angular/fire/storage';
 
 import { environment } from '../environments/environment';
 import { MedicoComponent } from './medico/medico.component';
+import { PacienteComponent } from './paciente/paciente.component';
 
 @NgModule({
   declarations: [
@@ -24,7 +25,8 @@ import { MedicoComponent } from './medico/medico.component';
     AuthComponent,
     HomeComponent,
     SolicitarComponent,
-    MedicoComponent
+    MedicoComponent,
+    PacienteComponent
   ],
   imports: [
     BrowserModule,

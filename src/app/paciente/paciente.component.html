@@ -1,0 +1,74 @@
+<h2>Bienvenido {{ nombre }}</h2>
+<button (click)="cerrarSesion()">Cerrar Sesión</button>
+
+<hr>
+
+<h3>Mi Perfil</h3>
+<div class="perfil">
+  <p><strong>Nombre:</strong> {{ nombre }}</p>
+  <p><strong>Apellido:</strong> {{ apellido }}</p>
+  <p><strong>DNI:</strong> {{ dni }}</p>
+  <p><strong>Email:</strong> {{ email }}</p>
+</div>
+
+<hr>
+
+<h3>Solicitar Turno</h3>
+<div class="solicitud">
+  <label>Especialidad:</label>
+  <select [(ngModel)]="nuevaEspecialidad">
+    <option *ngFor="let esp of especialidades" [value]="esp">{{ esp }}</option>
+  </select>
+
+  <label>Fecha:</label>
+  <input type="date" [(ngModel)]="nuevaFecha">
+
+  <label>Hora:</label>
+  <input type="time" [(ngModel)]="nuevaHora">
+
+  <button (click)="solicitarTurno()">Solicitar</button>
+</div>
+
+<hr>
+
+<h3>Mis Turnos Próximos</h3>
+<table>
+  <tr>
+    <th>Fecha</th>
+    <th>Hora</th>
+    <th>Especialidad</th>
+    <th>Estado</th>
+    <th>Acciones</th>
+  </tr>
+
+  <tr *ngFor="let turno of turnosFuturos">
+    <td>{{ turno.fecha }}</td>
+    <td>{{ turno.hora }}</td>
+    <td>{{ turno.especialidad }}</td>
+    <td><span class="estado {{ turno.estado }}">{{ turno.estado }}</span></td>
+
+    <td>
+      <button (click)="cancelarTurno(turno.id)" *ngIf="turno.estado !== 'atendido'">Cancelar</button>
+    </td>
+  </tr>
+</table>
+
+<hr>
+
+<h3>Historial de Turnos</h3>
+<table>
+  <tr>
+    <th>Fecha</th>
+    <th>Hora</th>
+    <th>Especialidad</th>
+    <th>Estado</th>
+  </tr>
+
+  <tr *ngFor="let turno of turnosPasados">
+    <td>{{ turno.fecha }}</td>
+    <td>{{ turno.hora }}</td>
+    <td>{{ turno.especialidad }}</td>
+    <td><span class="estado {{ turno.estado }}">{{ turno.estado }}</span></td>
+  </tr>
+</table>
+
