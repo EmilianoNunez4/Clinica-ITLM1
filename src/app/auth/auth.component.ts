@@ -137,9 +137,7 @@ async registrar() {
     alert('Error al registrar: ' + err.message);
   }
 
-  const emailRegex =
-    /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-
+  
   if (!emailRegex.test(this.regEmail)) {
     console.log('Valor de email ingresado:', this.regEmail);
     alert('Por favor, ingresá un correo electrónico válido');
@@ -175,4 +173,3 @@ async registrar() {
 
 }
 
-}
