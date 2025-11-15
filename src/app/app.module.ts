@@ -22,6 +22,7 @@ import { NavbarComponent } from './components/navbar/navbar.component';
 import { FooterComponent } from './components/footer/footer.component';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { MedicoComponent } from './medico/medico.component';
+import { PacienteComponent } from './paciente/paciente.component';
 
 @NgModule({
   declarations: [
@@ -29,6 +30,8 @@ import { MedicoComponent } from './medico/medico.component';
     AuthComponent,
     HomeComponent,
     SolicitarComponent,
+    MedicoComponent,
+    PacienteComponent
     NavbarComponent,
     FooterComponent,
     MedicoComponent
