@@ -6,7 +6,7 @@ import { getAuth } from 'firebase/auth';
 export const environment = {
   production: true,
   firebaseConfig : {
-  apiKey: "AIzaSyBrEBb8px0aA3sTmertjhOlhNn1ZQoNl3s",
+ apiKey: "AIzaSyBrEBb8px0aA3sTmertjhOlhNn1ZQoNl3s",
   authDomain: "clinica-itlm2.firebaseapp.com",
   projectId: "clinica-itlm2",
   storageBucket: "clinica-itlm2.firebasestorage.app",

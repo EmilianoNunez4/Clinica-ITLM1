@@ -1,3 +1,9 @@
+  <app-navbar></app-navbar>
+<div class="home-container">
+  <header class="header">
+    <h1>¡Bienvenido, {{ usuario?.nombre || 'usuario' }}!</h1>
+    <h1>Prueba 2 Juancito</h1>  
+  </header>
 <!--  PANEL ADMIN -->
 <div *ngIf="usuario?.rol === 'admin'" class="admin-layout">
   <aside class="admin-sidebar">
@@ -114,6 +120,23 @@
       </ng-template>
     </section>
 
+    <!-- 🔹 PACIENTE -->
+    <section *ngIf="usuario?.rol === 'paciente'">
+    
+      <button (click)="irASolicitar()">🩺 Solicitar turno</button>
+
+      <div *ngIf="misTurnos.length; else noMisTurnos">
+        <h3>Mis turnos reservados</h3>
+        <div class="turno-card" *ngFor="let t of misTurnos; let i = index">
+          <h4>{{ t.fecha }} - {{ t.hora }}</h4>
+          <p>{{ t.especialidad }}</p>
+          <button (click)="cancelarTurno(i)">Cancelar</button>
+        </div>
+      </div>
+
+      <ng-template #noMisTurnos>
+        <p>No tenés turnos reservados.</p>
+      </ng-template>
     <!-- REPORTES -->
     <section *ngIf="seccionActiva === 'reportes'">
       <h2>Mas secciones</h2>
@@ -132,4 +155,5 @@
   <h2>Bienvenido {{ usuario.nombre }}</h2>
   <p>Interfaz de {{ usuario.rol }}</p>
 </div>
+<app-footer></app-footer>
 
