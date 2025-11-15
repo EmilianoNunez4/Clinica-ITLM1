@@ -1,0 +1,26 @@
+.footer {
+  background-color: #0b1223 !important;
+  color: #ccc;
+}
+
+
+.footer a {
+  transition: color 0.3s ease;
+}
+
+.footer a:hover {
+  color: #0d6efd;
+}
+
+.social-icons i {
+  font-size: 1.2rem;
+}
+
+@media (max-width: 768px) {
+  .footer .footer-logo {
+    margin-bottom: 10px;
+  }
+  .footer .social-icons {
+    justify-content: center;
+  }
+}

@@ -1,53 +1,73 @@
-<h2>Bienvenido Dr. {{ nombre }}</h2>
-<button (click)="cerrarSesion()">Cerrar Sesión</button>
+<div class="medico-panel">
+  <aside class="sidebar">
+    <div class="sidebar-top">
+      <div class="brand">CLINICA</div>
+      <div class="greeting">
+        <h1 class="greeting-title">{{ ((nombre || '').slice(-1).toLowerCase() === 'a') ? 'Bienvenida Dra.' : 'Bienvenido Dr.' }}<span class="greeting-name"> {{ nombre }}</span></h1>
+      </div>
+    </div>
 
-<hr>
+    <nav class="sidebar-nav">
+      <button class="nav-btn" [class.active]="!verHistorial" (click)="verHistorial = false">Turnos Activos</button>
+      <button class="nav-btn" [class.active]="verHistorial" (click)="verHistorial = true">Historial</button>
+    </nav>
 
-<h3>Turnos Activos</h3>
-<table>
-  <tr>
-    <th>Fecha</th>
-    <th>Hora</th>
-    <th>Paciente</th>
-    <th>Especialidad</th>
-    <th>Estado</th>
-    <th>Acciones</th>
-  </tr>
-  <tr *ngFor="let turno of turnosActivos">
-    <td>{{ turno.fecha }}</td>
-    <td>{{ turno.hora }}</td>
-    <td>{{ turno.nombrePaciente || '-' }}</td>
-    <td>{{ turno.especialidad }}</td>
-    <td>
-      <span class="estado {{ turno.estado }}">{{ turno.estado }}</span>
-    </td>
-    <td>
-      <button (click)="cambiarEstado(turno.id, 'atendido')">Atendido</button>
-      <button (click)="cambiarEstado(turno.id, 'cancelado')">Cancelado</button>
-    </td>
-  </tr>
-</table>
+    <div class="sidebar-footer">
+      <button class="btn-logout" (click)="cerrarSesion()">Cerrar sesión</button>
+    </div>
+  </aside>
 
-<hr>
+  <main class="main-area">
+    <header class="main-header">
+      <h2 class="main-title">Panel de Turnos</h2>
+    </header>
 
-<h3>Historial de Atenciones</h3>
-<table>
-  <tr>
-    <th>Fecha</th>
-    <th>Hora</th>
-    <th>Paciente</th>
-    <th>Especialidad</th>
-    <th>Estado</th>
-  </tr>
-  <tr *ngFor="let turno of turnosAtendidos">
-    <td>{{ turno.fecha }}</td>
-    <td>{{ turno.hora }}</td>
-    <td>{{ turno.nombrePaciente || '-' }}</td>
-    <td>{{ turno.especialidad }}</td>
-    <td>
-      <span class="estado {{ turno.estado }}">{{ turno.estado }}</span>
-    </td>
-  </tr>
-</table>
+    <section class="turnos-section">
+      <!-- Turnos Activos -->
+      <div *ngIf="!verHistorial">
+        <div *ngIf="turnosActivos.length > 0; else noActive">
+          <div class="turnos-list">
+            <article *ngFor="let turno of turnosActivos" class="turno-card">
+              <div class="turno-grid">
+                <div class="turno-item"><div class="label">Fecha</div><div class="value">{{ turno.fecha }}</div></div>
+                <div class="turno-item"><div class="label">Hora</div><div class="value">{{ turno.hora }}</div></div>
+                <div class="turno-item"><div class="label">Paciente</div><div class="value">{{ turno.nombrePaciente ? turno.nombrePaciente : 'Disponible' }}</div></div>
+                <div class="turno-item"><div class="label">Especialidad</div><div class="value">{{ turno.especialidad }}</div></div>
+                <div class="turno-item"><div class="label">Estado</div><div class="value">{{ turno.estado }}</div></div>
+              </div>
+              <div class="turno-actions">
+                <button *ngIf="turno.estado !== 'atendido'" class="btn-attend" (click)="cambiarEstado(turno.id, 'atendido')">Marcar como Atendido</button>
+              </div>
+            </article>
+          </div>
+        </div>
+        <ng-template #noActive>
+          <div class="empty">No hay turnos activos.</div>
+        </ng-template>
+      </div>
+
+      <!-- Historial -->
+      <div *ngIf="verHistorial">
+        <div *ngIf="turnosAtendidos.length > 0; else noHist">
+          <div class="turnos-list">
+            <article *ngFor="let turno of turnosAtendidos" class="turno-card">
+              <div class="turno-grid">
+                <div class="turno-item"><div class="label">Fecha</div><div class="value">{{ turno.fecha }}</div></div>
+                <div class="turno-item"><div class="label">Hora</div><div class="value">{{ turno.hora }}</div></div>
+                <div class="turno-item"><div class="label">Paciente</div><div class="value">{{ turno.nombrePaciente ? turno.nombrePaciente : '—' }}</div></div>
+                <div class="turno-item"><div class="label">Especialidad</div><div class="value">{{ turno.especialidad }}</div></div>
+                <div class="turno-item"><div class="label">Estado</div><div class="value estado-atendido">{{ turno.estado }}</div></div>
+              </div>
+            </article>
+          </div>
+        </div>
+        <ng-template #noHist>
+          <div class="empty">No hay atenciones registradas.</div>
+        </ng-template>
+      </div>
+    </section>
+  </main>
+</div>
+
 
 
