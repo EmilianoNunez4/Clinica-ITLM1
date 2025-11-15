@@ -1,159 +1,211 @@
-  <app-navbar></app-navbar>
-<div class="home-container">
-  <header class="header">
-    <h1>¡Bienvenido, {{ usuario?.nombre || 'usuario' }}!</h1>
-    <h1>Prueba 2 Juancito</h1>  
-  </header>
-<!--  PANEL ADMIN -->
-<div *ngIf="usuario?.rol === 'admin'" class="admin-layout">
-  <aside class="admin-sidebar">
-    <h2 class="logo">Panel Admin</h2>
-    <nav>
-      <ul>
-        <li>
-          <button (click)="seccionActiva = 'usuarios'" [class.active]="seccionActiva === 'usuarios'">Usuarios</button>
-        </li>
+<!-- ==========================
+     SPINNER DE CARGA
+========================== -->
+<div *ngIf="cargando" class="spinner-container">
+  <div class="spinner"></div>
+  <p>Cargando usuario...</p>
+</div>
 
-        <li>
-          <button (click)="seccionActiva = 'turnos'" [class.active]="seccionActiva === 'turnos'">Turnos</button>
-        </li>
+<!-- ==========================
+     CONTENIDO PRINCIPAL
+========================== -->
+<div *ngIf="!cargando">
 
-        <li>
-          <button (click)="seccionActiva = 'reportes'" [class.active]="seccionActiva === 'reportes'">Reportes</button>
-        </li>
+  <!-- NAV SOLO PACIENTE -->
+  <app-navbar *ngIf="usuario?.rol === 'paciente'"></app-navbar>
 
-        <li class="logout-item">
-          <button (click)="logout()">Cerrar sesión</button>
-        </li>
-      </ul>
-    </nav>
-  </aside>
+  <!-- ==========================
+       PANEL ADMIN
+  ========================== -->
+  <div *ngIf="usuario?.rol === 'admin'" class="admin-layout">
 
-  <main class="admin-content">
-    <!--  GESTIÓN DE USUARIOS -->
-    <section *ngIf="seccionActiva === 'usuarios'">
-      <h1>Gestión de Usuarios</h1>
-      <div class="tabla">
-        <table>
-          <thead>
-            <tr>
-              <th>Nombre</th>
-              <th>Email</th>
-              <th>Rol</th>
-              <th>Estado</th>
-              <th>Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let u of usuarios; let i = index">
-              <td>{{ u.nombre }}</td>
-              <td>{{ u.email }}</td>
-              <td>{{ u.rol }}</td>
-              <td [class.inactivo]="u.activo === false">
-                {{ u.activo === false ? 'Inactivo' : 'Activo' }}
-              </td>
-              <td>
-                <button class="btn-u" (click)="cambiarRol(i)">Cambiar rol</button>
-                <button class="btn-ddb" *ngIf="u.activo !== false" (click)="darBaja(i)">Dar de baja</button>
-                <button class="btn-dda" *ngIf="u.activo === false" (click)="reactivarUsuario(i)">Reactivar</button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </section>
+    <!-- SIDEBAR -->
+    <aside class="admin-sidebar">
+      <h2 class="logo">Panel Admin</h2>
+      <nav>
+        <ul>
+          <li>
+            <button (click)="seccionActiva = 'usuarios'"
+                    [class.active]="seccionActiva === 'usuarios'">
+              Usuarios
+            </button>
+          </li>
 
-    <!-- 📅 GESTIÓN DE TURNOS -->
-    <section *ngIf="seccionActiva === 'turnos'" class="turnos-admin">
-      <div class="turnos-header">
-        <h1 style="color: black;">Gestión de Turnos</h1>
-        <button class="btn-generar" (click)="generarTurnos()">GENERAR TURNOS (14 DÍAS)</button>
-      </div>
+          <li>
+            <button (click)="seccionActiva = 'turnos'"
+                    [class.active]="seccionActiva === 'turnos'">
+              Turnos
+            </button>
+          </li>
 
-      <!-- 🔍 FILTROS -->
-      <div class="filtros-turnos">
-        <input
-          type="text"
-          placeholder="Buscar por especialidad..."
-          [(ngModel)]="filtroEspecialidad"
-          (input)="filtrarTurnos()"
-        />
-        <input
-          type="date"
-          [(ngModel)]="filtroFecha"
-          (change)="filtrarTurnos()"
-        />
-        <button class="btn-limpiar" (click)="limpiarFiltros()">Limpiar</button>
-      </div>
+          <li>
+            <button (click)="seccionActiva = 'reportes'"
+                    [class.active]="seccionActiva === 'reportes'">
+              Reportes
+            </button>
+          </li>
 
-      <div *ngIf="turnosFiltrados && turnosFiltrados.length; else noTurnos" class="lista-turnos">
-        <div
-          class="item-dia"
-          *ngFor="let fecha of obtenerFechasUnicas(turnosFiltrados)"
-          (click)="toggleFecha(fecha)"
-          [class.abierto]="fechaSeleccionada === fecha"
-        >
-          <div class="cabecera-dia">
-            <h4>{{ fecha | date: 'fullDate' }}</h4>
-            <span>{{ obtenerTurnosPorFecha(fecha, turnosFiltrados).length }} turnos</span>
-          </div>
+          <li class="logout-item">
+            <button (click)="logout()">Cerrar sesión</button>
+          </li>
+        </ul>
+      </nav>
+    </aside>
 
-          <div *ngIf="fechaSeleccionada === fecha" class="horarios-dia">
-            <div *ngFor="let t of obtenerTurnosPorFecha(fecha, turnosFiltrados); let i = index" class="horario-item">
-              <div class="info-turno">
-                <p><strong>Horario: </strong> {{ t.hora }}</p>
-                <p><strong>Especialidad: </strong> {{ t.especialidad }}</p>
-                <p><strong>Estado:</strong> {{ t.estado }}</p>
-              </div>
-              <div class="acciones">
-                <button class="btn-hor" (click)="editarCampo(i, 'hora'); $event.stopPropagation()">Cambiar horario</button>
-                <button class="btn-esp" (click)="editarCampo(i, 'especialidad'); $event.stopPropagation()">Cambiar especialidad</button>
-                <button (click)="editarCampo(i, 'estado'); $event.stopPropagation()">Cambiar estado</button>
+    <!-- CONTENIDO PRINCIPAL ADMIN -->
+    <main class="admin-content">
+
+      <!-- ==========================
+           GESTIÓN DE USUARIOS
+      ========================== -->
+      <section *ngIf="seccionActiva === 'usuarios'">
+        <h1>Gestión de Usuarios</h1>
+
+        <div class="tabla">
+          <table>
+            <thead>
+              <tr>
+                <th>Nombre</th>
+                <th>Email</th>
+                <th>Rol</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              <tr *ngFor="let u of usuarios; let i = index">
+                <td>{{ u.nombre }}</td>
+                <td>{{ u.email }}</td>
+                <td>{{ u.rol }}</td>
+
+                <td [class.inactivo]="u.activo === false">
+                  {{ u.activo === false ? 'Inactivo' : 'Activo' }}
+                </td>
+
+                <td>
+                  <button class="btn-u" (click)="cambiarRol(i)">Cambiar rol</button>
+
+                  <button class="btn-ddb" *ngIf="u.activo !== false"
+                          (click)="darBaja(i)">
+                    Dar de baja
+                  </button>
+
+                  <button class="btn-dda" *ngIf="u.activo === false"
+                          (click)="reactivarUsuario(i)">
+                    Reactivar
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ==========================
+           GESTIÓN DE TURNOS
+      ========================== -->
+      <section *ngIf="seccionActiva === 'turnos'" class="turnos-admin">
+
+        <div class="turnos-header">
+          <h1 style="color: black;">Gestión de Turnos</h1>
+          <button class="btn-generar" (click)="generarTurnos()">
+            GENERAR TURNOS (14 DÍAS)
+          </button>
+        </div>
+
+        <!-- FILTROS -->
+        <div class="filtros-turnos">
+          <input type="text"
+                 placeholder="Buscar por especialidad..."
+                 [(ngModel)]="filtroEspecialidad"
+                 (input)="filtrarTurnos()" />
+
+          <input type="date"
+                 [(ngModel)]="filtroFecha"
+                 (change)="filtrarTurnos()" />
+
+          <button class="btn-limpiar" (click)="limpiarFiltros()">Limpiar</button>
+        </div>
+
+        <!-- LISTA DE TURNOS -->
+        <div *ngIf="turnosFiltrados.length; else noTurnos" class="lista-turnos">
+          <div *ngFor="let fecha of obtenerFechasUnicas(turnosFiltrados)"
+               class="item-dia"
+               (click)="toggleFecha(fecha)"
+               [class.abierto]="fechaSeleccionada === fecha">
+
+            <div class="cabecera-dia">
+              <h4>{{ fecha | date:'fullDate' }}</h4>
+              <span>{{ obtenerTurnosPorFecha(fecha, turnosFiltrados).length }} turnos</span>
+            </div>
+
+            <div *ngIf="fechaSeleccionada === fecha" class="horarios-dia">
+              <div class="horario-item"
+                   *ngFor="let t of obtenerTurnosPorFecha(fecha, turnosFiltrados); let i = index">
+
+                <div class="info-turno">
+                  <p><strong>Horario: </strong> {{ t.hora }}</p>
+                  <p><strong>Especialidad: </strong> {{ t.especialidad }}</p>
+                  <p><strong>Estado:</strong> {{ t.estado }}</p>
+                </div>
+
+                <div class="acciones">
+                  <button class="btn-hor"
+                          (click)="editarCampo(i, 'hora'); $event.stopPropagation()">
+                    Cambiar horario
+                  </button>
+
+                  <button class="btn-esp"
+                          (click)="editarCampo(i, 'especialidad'); $event.stopPropagation()">
+                    Cambiar especialidad
+                  </button>
+
+                  <button (click)="editarCampo(i, 'estado'); $event.stopPropagation()">
+                    Cambiar estado
+                  </button>
+                </div>
               </div>
             </div>
           </div>
         </div>
+
+        <ng-template #noTurnos>
+          <p class="no-turnos">No hay turnos generados.</p>
+        </ng-template>
+      </section>
+
+      <!-- REPORTE -->
+      <section *ngIf="seccionActiva === 'reportes'">
+        <h2>Más secciones</h2>
+        <p>Próximamente...</p>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- PANEL PACIENTE -->
+  <section *ngIf="usuario?.rol === 'paciente'" class="paciente-container">
+
+    <button (click)="irASolicitar()">🩺 Solicitar turno</button>
+
+    <div *ngIf="misTurnos.length; else noMisTurnos">
+      <h3>Mis turnos reservados</h3>
+
+      <div class="turno-card" *ngFor="let t of misTurnos; let i = index">
+        <h4>{{ t.fecha }} - {{ t.hora }}</h4>
+        <p>{{ t.especialidad }}</p>
+        <button (click)="cancelarTurno(i)">Cancelar</button>
       </div>
+    </div>
 
-      <ng-template #noTurnos>
-        <p class="no-turnos">No hay turnos generados.</p>
-      </ng-template>
-    </section>
+    <ng-template #noMisTurnos>
+      <p>No tenés turnos reservados.</p>
+    </ng-template>
 
-    <!-- 🔹 PACIENTE -->
-    <section *ngIf="usuario?.rol === 'paciente'">
-    
-      <button (click)="irASolicitar()">🩺 Solicitar turno</button>
+  </section>
 
-      <div *ngIf="misTurnos.length; else noMisTurnos">
-        <h3>Mis turnos reservados</h3>
-        <div class="turno-card" *ngFor="let t of misTurnos; let i = index">
-          <h4>{{ t.fecha }} - {{ t.hora }}</h4>
-          <p>{{ t.especialidad }}</p>
-          <button (click)="cancelarTurno(i)">Cancelar</button>
-        </div>
-      </div>
+  <!-- FOOTER SOLO PACIENTE -->
+  <app-footer *ngIf="usuario?.rol === 'paciente'"></app-footer>
 
-      <ng-template #noMisTurnos>
-        <p>No tenés turnos reservados.</p>
-      </ng-template>
-    <!-- REPORTES -->
-    <section *ngIf="seccionActiva === 'reportes'">
-      <h2>Mas secciones</h2>
-      <p>Próximamente...</p>
-    </section>
-  </main>
 </div>
-
-<!-- PANEL USUARIO / MÉDICO -->
-<div *ngIf="!usuario" class="spinner-container">
-  <div class="spinner"></div>
-  <p>Cargando perfil...</p>
-</div>
-
-<div *ngIf="usuario && usuario.rol !== 'admin'" class="user-layout">
-  <h2>Bienvenido {{ usuario.nombre }}</h2>
-  <p>Interfaz de {{ usuario.rol }}</p>
-</div>
-<app-footer></app-footer>
-

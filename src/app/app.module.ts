@@ -30,7 +30,7 @@ import { MedicoComponent } from './medico/medico.component';
     HomeComponent,
     SolicitarComponent,
     NavbarComponent,
-    FooterComponent
+    FooterComponent,
     MedicoComponent
   ],
   imports: [
