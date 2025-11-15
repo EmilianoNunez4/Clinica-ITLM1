@@ -50,8 +50,8 @@
       TURNOS
     </a>
     <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="turnosDropdown">
-      <li><a class="dropdown-item" href="#">Ver mis turnos</a></li>
-      <li><a class="dropdown-item" href="#">Pedir un turno</a></li>
+      <li><a class="dropdown-item" routerLink="/turnos/solicitar">Ver mis turnos</a></li>
+      <li><a class="dropdown-item" routerLink="/turnos/solicitar">Pedir un turno</a></li>
     </ul>
   </li>
 
@@ -64,7 +64,7 @@
 
       <!-- Botón sesión + menú hamburguesa -->
       <div class="col-6 col-md-3 d-flex justify-content-end align-items-center">
-        <button class="btn btn-primary rounded-pill  d-none d-md-inline-block">
+        <button class="btn btn-primary rounded-pill  d-none d-md-inline-block"  routerLink="/auth">
           INICIAR SESIÓN
         </button>
 

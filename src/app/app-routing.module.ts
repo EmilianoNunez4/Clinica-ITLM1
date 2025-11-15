@@ -7,9 +7,9 @@ import { SolicitarComponent } from './turnos/solicitar/solicitar.component';
 import { MedicoComponent } from './medico/medico.component';
 
 const routes: Routes = [
-  { path: '', redirectTo: 'auth', pathMatch: 'full' },
+  { path: '', redirectTo: 'home', pathMatch: 'full' },
+  { path: 'home', component: HomeComponent, },
   { path: 'auth', component: AuthComponent },
-  { path: 'home', component: HomeComponent, canActivate: [AuthGuard] },
   { path: 'turnos/solicitar', component: SolicitarComponent, canActivate: [AuthGuard] },
   {path: 'medico', component: MedicoComponent, canActivate: [AuthGuard] }
 ];

@@ -31,7 +31,7 @@ import { PacienteComponent } from './paciente/paciente.component';
     HomeComponent,
     SolicitarComponent,
     MedicoComponent,
-    PacienteComponent
+    PacienteComponent,
     NavbarComponent,
     FooterComponent,
     MedicoComponent
