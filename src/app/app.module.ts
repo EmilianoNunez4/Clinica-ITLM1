@@ -21,6 +21,7 @@ import { environment } from '../environments/environment';
 import { NavbarComponent } from './components/navbar/navbar.component';
 import { FooterComponent } from './components/footer/footer.component';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
+import { MedicoComponent } from './medico/medico.component';
 
 @NgModule({
   declarations: [
@@ -30,6 +31,7 @@ import { provideAnimationsAsync } from '@angular/platform-browser/animations/asy
     SolicitarComponent,
     NavbarComponent,
     FooterComponent
+    MedicoComponent
   ],
   imports: [
     BrowserModule,

@@ -13,6 +13,8 @@ import {
   collection,
   getDocs,
 } from 'firebase/firestore';
+import Swal from 'sweetalert2';
+
 
 interface Usuario {
   uid: string;
@@ -28,15 +30,37 @@ interface Usuario {
   styleUrls: ['./auth.component.scss'],
 })
 export class AuthComponent {
+  // ===========================
+  // CAMPOS DEL FORMULARIO
+  // ===========================
   loginEmail = '';
   loginPass = '';
-  regEmail = '';
-  regPass = '';
-  nombre = '';
+
+  registerName = '';
+  registerEmail = '';
+  registerPass = '';
+
+  // Alternar entre login y registro
+  isRegister = false;
 
   constructor(private router: Router) {}
 
-  // 🔹 LOGIN
+  // ===========================
+  // CAMBIAR FORMULARIO
+  // ===========================
+  toggleRegister() {
+    this.isRegister = !this.isRegister;
+
+    this.loginEmail = '';
+    this.loginPass = '';
+    this.registerName = '';
+    this.registerEmail = '';
+    this.registerPass = '';
+  }
+
+  // ===========================
+  // LOGIN
+  // ===========================
   async login() {
     try {
       const auth = getAuth();
@@ -48,31 +72,81 @@ export class AuthComponent {
         this.loginPass
       );
 
-      const userRef = doc(db, 'usuarios', cred.user.uid);
-      const snap = await getDoc(userRef);
+      const ref = doc(db, 'usuarios', cred.user.uid);
+      const snap = await getDoc(ref);
 
       if (!snap.exists()) {
-        alert('Usuario no encontrado en base de datos');
+        if (!snap.exists()) {
+          await Swal.fire({
+            icon: 'error',
+            title: 'Usuario no encontrado',
+            text: 'No encontramos tu cuenta en nuestra base de datos.',
+            confirmButtonText: 'Entendido',
+            confirmButtonColor: '#b00020',
+            background: '#f7f7f7',
+          });
+          return;
+        }
         return;
       }
 
-      const userData = snap.data() as Usuario;
+      const user = snap.data() as Usuario;
 
-      // Guardar usuario actual localmente
-      localStorage.setItem('usuarioActual', JSON.stringify(userData));
+      localStorage.setItem('usuarioActual', JSON.stringify(user));
 
-      alert(`Bienvenido ${userData.nombre}`);
-      this.router.navigate(['/home']);
+      await Swal.fire({
+        icon: 'success',
+        title: '¡Bienvenido!',
+        text: `Hola ${user.nombre}, nos alegra tenerte de vuelta 💙`,
+        confirmButtonColor: '#00509e',
+      });
+
+
+      if (user.rol === 'medico') {
+        this.router.navigate(['/medico']);
+      } else {
+        this.router.navigate(['/home']);
+      }
+
     } catch (err: any) {
-      console.error('❌ Error al iniciar sesión:', err);
-      alert('Error al iniciar sesión: ' + err.message);
+        await Swal.fire({
+          icon: 'error',
+          title: 'Error al iniciar sesión',
+          text:'Verificá tu correo y contraseña.',
+          confirmButtonText: 'Reintentar',
+          confirmButtonColor: '#b00020',
+          background: '#f7f7f7',
+        });
     }
   }
 
-  // 🔹 REGISTRO
-  async registrar() {
-    if (!this.nombre || !this.regEmail || !this.regPass) {
-      alert('Completar todos los campos');
+  // ===========================
+  // REGISTRO
+  // ===========================
+  async registrarUsuario() {
+    this.registerEmail = this.registerEmail.trim().toLowerCase();
+    this.registerPass = this.registerPass.trim();
+    this.registerName = this.registerName.trim();
+
+    if (!this.registerName || !this.registerEmail || !this.registerPass) {
+      await Swal.fire({
+        icon: 'warning',
+        title: 'Campos incompletos',
+        text: 'Por favor, completa todos los campos.',
+        confirmButtonColor: '#ff9800',
+      });
+      return;
+    }
+
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+
+    if (!emailRegex.test(this.registerEmail)) {
+      await Swal.fire({
+        icon: 'warning',
+        title: 'Correo no válido',
+        text: 'Ingresá un correo electrónico válido.',
+        confirmButtonColor: '#ff9800',
+      });
       return;
     }
 
@@ -80,42 +154,40 @@ export class AuthComponent {
       const auth = getAuth();
       const db = getFirestore();
 
-      // Crear usuario en Firebase Auth
       const cred = await createUserWithEmailAndPassword(
         auth,
-        this.regEmail.trim(),
-        this.regPass
+        this.registerEmail,
+        this.registerPass
       );
 
-      // Obtener usuarios existentes para definir rol
-      let rol = 'paciente';
-      try {
-        const allUsersSnap = await getDocs(collection(db, 'usuarios'));
-        if (allUsersSnap.empty) rol = 'admin';
-      } catch (e) {
-        console.warn('⚠️ No se pudo obtener usuarios existentes:', e);
-      }
+      const usersSnap = await getDocs(collection(db, 'usuarios'));
+      const rol = usersSnap.empty ? 'admin' : 'paciente';
 
-      // Estructura del nuevo usuario
       const nuevoUsuario: Usuario = {
         uid: cred.user.uid,
-        nombre: this.nombre.trim(),
-        email: this.regEmail.trim(),
+        nombre: this.registerName,
+        email: this.registerEmail,
         rol,
         fechaRegistro: new Date().toISOString(),
       };
 
-      // Guardar en Firestore con el UID como ID
       await setDoc(doc(db, 'usuarios', cred.user.uid), nuevoUsuario);
 
-      // Guardar localmente también
-      localStorage.setItem('usuarioActual', JSON.stringify(nuevoUsuario));
-
-      alert(`✅ Usuario ${rol === 'admin' ? 'administrador' : 'paciente'} registrado con éxito`);
+      await Swal.fire({
+        icon: 'success',
+        title: '¡Registro completado!',
+        text: 'Tu cuenta fue creada con éxito. Bienvenido a la Clínica ITLM.',
+        confirmButtonColor: '#00509e',
+      });
       this.router.navigate(['/home']);
+
     } catch (err: any) {
-      console.error('❌ Error al registrar usuario:', err);
-      alert('Error al registrar: ' + err.message);
+      await Swal.fire({
+        icon: 'error',
+        title: 'Error al registrarse',
+        text: err.message || 'Ocurrió un problema.',
+        confirmButtonColor: '#b00020',
+      });
     }
   }
 }
