@@ -48,6 +48,8 @@
               </td>
               <td>
                 <button class="btn-u" (click)="cambiarRol(i)">Cambiar rol</button>
+                <button class="btn-esp" *ngIf="u.rol === 'medico'" (click)="asignarEspecialidad(i)">Asignar especialidad</button>
+                <button class="btn-reasignar" *ngIf="u.rol === 'medico'" (click)="reasignarTurnosAMedico(i)">Reasignar turnos</button>
                 <button class="btn-ddb" *ngIf="u.activo !== false" (click)="darBaja(i)">Dar de baja</button>
                 <button class="btn-dda" *ngIf="u.activo === false" (click)="reactivarUsuario(i)">Reactivar</button>
               </td>

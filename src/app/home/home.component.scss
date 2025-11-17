@@ -148,6 +148,23 @@
      cursor: pointer;
 }
 
+.btn-esp{
+    padding: 5px 10px;
+    margin-right: 10px;
+    font-weight: 500;
+    border: 2px solid rgb(0, 217, 255);
+    border-radius: 10px;
+    background: rgb(0, 217, 255);
+    color: white;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s;
+    
+    &:hover {
+      background: rgb(50, 205, 50);
+      border-color: rgb(50, 205, 50);
+    }
+}
+
 .inactivo {
   color: red;
   font-weight: 600;
@@ -344,6 +361,22 @@
   100% {
     transform: rotate(360deg);
   }
+}
+.btn-reasignar{
+    padding: 5px 10px;
+    margin-right: 10px;
+    font-weight: 500;
+    border: 2px solid rgb(111, 66, 193);
+    border-radius: 10px;
+    background: rgb(111, 66, 193);
+    color: white;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s;
+
+    &:hover {
+      background: rgb(91, 51, 158);
+      border-color: rgb(91, 51, 158);
+    }
 }
 
 
