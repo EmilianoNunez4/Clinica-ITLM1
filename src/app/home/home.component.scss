@@ -1,439 +1,138 @@
-/* Botones del sidebar con hover */
-.admin-sidebar nav button {
-  background: #002b5b;
-  border: none;
-  color: #fff;
-  text-align: left;
-  font-size: 1rem;
-  padding: 0.8rem 1rem;
-  border-radius: 8px;
-  transition: background 0.3s, color 0.3s;
-  cursor: pointer;
-}
+/* ---------------------------------------------------------
+   HERO / CAROUSEL PRINCIPAL
+--------------------------------------------------------- */
 
-.admin-sidebar nav button:hover {
-  background: #00509e;
-}
-
-.admin-sidebar nav button.active {
-  background: #004080; 
-  font-weight: 600;
-}
-
-/* Sidebar */
-.admin-sidebar {
-  width: 250px;
-  background: #002b5b;
-  color: #fff;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 1.5rem 1rem;
-  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.2);
-  position: fixed;
-  left: 0;
-  top: 0;
-  bottom: 0;
-
-  nav {
-    flex: 1; 
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-
-    ul {
-      list-style: none;
-      padding: 0;
-      margin: 0;
-      display: flex;
-      flex-direction: column;
-      flex: 1;
-    }
-
-    li {
-      margin-bottom: 1rem;
-    }
-
-    button {
-      width: 100%;
-      background: none;
-      border: none;
-      color: #fff;
-      text-align: left;
-      font-size: 1rem;
-      padding: 0.8rem 1rem;
-      border-radius: 8px;
-      transition: background 0.3s;
-      cursor: pointer;
-
-      &:hover {
-        background: #00509e;
-      }
-
-      button.active{
-        background: #00509e;
-      }
-    }
-
-    .logout-item {
-      margin-top: auto; 
-      button {
-        background-color: #b00020;
-        text-align: center;
-        font-weight: bold;
-        &:hover {
-          background-color: #e33;
-        }
-      }
-    }
-  }
-}
-
-/* Tabla usuarios */
-.tabla table {
+/* Imagen principal del carrusel */
+.hero-img {
+  height: 75vh;
   width: 100%;
-  border-collapse: collapse;
-  background: white;
-  border-radius: 10px;
-  overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  object-fit: cover;
 }
 
-.tabla th, .tabla td {
-  padding: 0.8rem;
-  text-align: left;
-  border-bottom: 1px solid #ddd;
+/* Overlay con degradado */
+.carousel-img-overlay {
+  position: relative;
 }
 
-.tabla th {
-  background: #00509e;
-  color: white;
+.carousel-img-overlay::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to right,
+    #0b5685 0%,
+    #429ed9 30%,
+    rgba(255, 255, 255, 0.1) 80%
+  );
+  z-index: 1;
 }
 
-.tabla tr:hover {
-  background: #f2f8ff;
+/* Contenido del carrusel */
+.carousel-caption {
+  z-index: 2;
+  bottom: 40%;
 }
 
-.btn-u{
-    padding: 5px 10px;
-    margin-right: 10px;
-    font-weight: 500;
-    border: 2px solid #002b5b;
-    border-radius: 10px;
-    background: #002b5b;
-    color: white;
-    cursor: pointer;
+.carousel-caption h1 {
+  font-size: 2.8rem;
 }
 
-.btn-ddb{
-    padding: 5px 10px;
-    margin-right: 10px;
-    font-weight: 500;
-    border: 2px solid rgb(191, 10, 10);
-    border-radius: 10px;
-    background:  rgb(191, 10, 10);
-    color: white;
-     cursor: pointer;
+.carousel-caption p {
+  font-size: 0.95rem;
+  max-width: 350px;
 }
 
-.btn-dda{
-    padding: 5px 10px;
-    margin-right: 10px;
-    font-weight: 500;
-    border: 2px solid rgb(10, 191, 25);
-    border-radius: 10px;
-    background: rgb(10, 191, 25);
-    color: white;
-     cursor: pointer;
+/* Indicadores del carrusel */
+.carousel-indicators [data-bs-target] {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
 }
 
-.inactivo {
-  color: red;
+
+/* ---------------------------------------------------------
+   TIPOGRAFÍA - TITULOS - PÁRRAFOS
+--------------------------------------------------------- */
+
+section h2,
+section h3 {
+  color: #0a0830;
+}
+
+section p {
+  color: #1a1818;
+  line-height: 1.6;
+}
+
+.section-title {
+  font-size: 2rem !important;
+  font-weight: 700 !important;
+  text-transform: uppercase;
+}
+
+.underline {
+  width: 60px;
+  height: 4px;
+  background-color: #429ed9;
+  border-radius: 5px;
+}
+
+
+/* ---------------------------------------------------------
+   SOMBRAS - CARDS - FORM
+--------------------------------------------------------- */
+
+.shadow {
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15) !important;
+}
+
+.card {
+  border-radius: 12px;
+}
+
+.card-body h4 {
+  color: #0a0830;
+}
+
+form label {
   font-weight: 600;
 }
 
-.user-layout {
-  padding: 2rem;
-  text-align: center;
+
+/* ---------------------------------------------------------
+   OBRAS SOCIALES - LOGOS
+--------------------------------------------------------- */
+
+.logo-img {
+  max-height: 150px;
+  object-fit: contain;
+  filter: grayscale(100%);
+  transition: transform 0.3s ease, filter 0.3s ease;
 }
 
-.turnos-admin {
-  padding: 20px;
-  color: #fff;
-  padding: 20px;
-  padding-top: 0px;
-  padding-left: 0px;
-
-  .turnos-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1rem;
-
-    h3 {
-      font-size: 1.4rem;
-      font-weight: 600;
-    }
-
-    .btn-generar {
-      background-color: #b00020;
-      color: #fff;
-      border: none;
-      padding: 10px 16px;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: background 0.2s;
-      &:hover {
-        background-color: #e33;
-      }
-    }
-  }
-
-  .lista-turnos {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    background-color: #00509e;
-    padding: 20px;
-    border-radius: 20px;
-
-    .item-dia {
-      background-color: #fbfbfb;
-      color: rgb(61, 61, 61);
-      border-radius: 10px;
-      padding: 15px;
-      cursor: pointer;
-      transition: all 0.3s ease;
-
-      &.abierto {
-        background-color: #fbfbfb;
-        color: rgb(255, 255, 255);
-      }
-
-      .cabecera-dia {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        font-weight: 600;
-        color: #f2f2f2;
-        h4 {
-          margin: 0;
-          color:  rgb(61, 61, 61);
-        }
-        span {
-          font-size: 1rem;
-          opacity: 0.8;
-          color: black;
-        }
-      }
-
-      .horarios-dia {
-        margin-top: 10px;
-        border-top: 1px solid #444;
-        padding-top: 10px;
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-
-        .horario-item {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          background: #e6e6e6;
-          border-radius: 8px;
-          padding: 10px 15px;
-
-          .info-turno {
-            display: flex;
-            gap: 20px;
-            align-items: center;
-            p {
-              margin: 0;
-              color: rgb(61, 61, 61);
-            }
-          }
-
-          .acciones {
-            display: flex;
-            gap: 6px;
-            .btn-esp{
-                background: #da8505;
-              border: 1px solid #da8505;
-              font-weight: 600;
-              border-radius: 6px;
-              color: #ffffff;
-              cursor: pointer;
-              transition: all 0.2s;
-              padding: 4px 8px;
-              &:hover {
-                background: #9d5e00;
-              }
-            }
-             .btn-hor{
-                background: #868686;
-              border: 1px solid #868686;
-              font-weight: 600;
-              border-radius: 6px;
-              color: #ffffff;
-              cursor: pointer;
-              transition: all 0.2s;
-              padding: 4px 8px;
-              &:hover {
-                background: rgb(61, 61, 61);
-              }
-            }
-            button {
-              background: #00c036;
-              border: 1px solid #00c036;
-              font-weight: 600;
-              border-radius: 6px;
-              color: #ffffff;
-              cursor: pointer;
-              transition: all 0.2s;
-              padding: 4px 8px;
-              &:hover {
-                background: #028527;
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-
-  .no-turnos {
-    text-align: center;
-    opacity: 0.7;
-    margin-top: 1rem;
-  }
+.logo-img:hover {
+  filter: grayscale(0%);
+  transform: scale(1.05);
 }
 
-/* 🌟 Spinner de carga para usuario/médico */
-.spinner-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 80vh;
-  color: #004080;
-  font-size: 1.1rem;
-  font-weight: 500;
-  text-align: center;
 
-  p {
-    margin-top: 1rem;
-    opacity: 0.8;
-  }
-}
+/* ---------------------------------------------------------
+   CAROUSEL LOGOS - FLECHAS
+--------------------------------------------------------- */
 
-.spinner {
-  border: 6px solid rgba(0, 0, 0, 0.1);
-  border-top: 6px solid #00509e; /* color azul profesional */
+.custom-arrow {
+  background-color: #0c0c0c;
   border-radius: 50%;
-  width: 50px;
-  height: 50px;
-  animation: spin 1s linear infinite;
+  padding: 20px;
+  background-size: 50% 50%;
 }
 
-/* animación suave */
-@keyframes spin {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
+.carousel-control-prev,
+.carousel-control-next {
+  width: 5%;
 }
 
-
-/* Contenido principal */
-.admin-content {
-  flex: 1;
-  margin-left: 280px;
-  padding: 2rem;
-  width: calc(100% - 250px); 
-  overflow-x: auto; 
-  box-sizing: border-box;
-}
-
-.tabla table,
-.tabla-turnos table {
-  width: 100%; 
-  border-collapse: collapse;
-  background: white;
-  border-radius: 10px;
-  overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.tabla th,
-.tabla-turnos th {
-  background: #00509e;
-  color: white;
-  text-align: left;
-  padding: 0.8rem;
-  white-space: nowrap;
-}
-
-.tabla td,
-.tabla-turnos td {
-  padding: 0.8rem;
-  text-align: left;
-  border-bottom: 1px solid #ddd;
-}
-
-.tabla tr:hover,
-.tabla-turnos tr:hover {
-  background: #f2f8ff;
-}
-
-@media (max-width: 900px) {
-  .admin-content {
-    margin-left: 0;
-    width: 100%;
-  }
-
-  .admin-sidebar {
-    position: relative;
-    width: 100%;
-  }
-}
-
-/* 🔹 Filtros de turnos */
-.filtros-turnos {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 1.2rem;
-
-  input {
-    padding: 8px 12px;
-    border: 1px solid #ccc;
-    border-radius: 6px;
-    font-size: 0.95rem;
-    outline: none;
-    width: 200px;
-    transition: border-color 0.2s, box-shadow 0.2s;
-
-    &:focus {
-      border-color: #00509e;
-      box-shadow: 0 0 5px rgba(0, 80, 158, 0.3);
-    }
-  }
-
-  .btn-limpiar {
-    background: #ccc;
-    border: none;
-    border-radius: 6px;
-    padding: 8px 12px;
-    cursor: pointer;
-    transition: background 0.2s;
-    font-weight: 500;
-    color: #333;
-
-    &:hover {
-      background: #bbb;
-    }
-  }
+.carousel-control-prev-icon,
+.carousel-control-next-icon {
+  filter: invert(100%);
 }
