@@ -1,0 +1,118 @@
+<!-- Franja superior -->
+<div class="top-bar text-white py-1">
+  <div class="container">
+    <div class="row align-items-center">
+      <div class="col-12 col-md-6 d-flex align-items-center justify-content-center justify-content-md-start">
+        <i class="bi bi-geo-alt-fill me-2"></i>
+        <span>Buenos Aires, Argentina</span>
+      </div>
+      <div class="col-12 col-md-6 d-none d-md-flex justify-content-end">
+        <a href="#" class="text-white me-3"><i class="bi bi-facebook"></i></a>
+        <a href="#" class="text-white me-3"><i class="bi bi-instagram"></i></a>
+        <a href="#" class="text-white"><i class="bi bi-twitter-x"></i></a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Navbar principal -->
+<header class="main-navbar text-white py-3"> 
+  <div class="container">
+    <div class="row align-items-center">
+
+      <!-- Logo -->
+      <div class="col-6 col-md-3 d-flex justify-content-start align-items-center">
+        <a routerLink="/home" class="d-inline-block">
+          <img src="assets/logo.png"
+               class="img-fluid"
+               style="max-width: 120px; height: auto; object-fit: contain;">
+        </a>
+      </div>
+
+
+      <!-- Enlaces desktop -->
+      <div class="col-md-6 d-none d-md-block">
+        <ul class="nav justify-content-end align-items-center">
+  <li class="nav-item">
+    <a class="nav-link text-white" href="#">INSTITUCIONAL</a>
+  </li>
+
+  <!-- Dropdown de Turnos -->
+  <li class="nav-item dropdown">
+    <a
+      class="nav-link dropdown-toggle text-white"
+      href="#"
+      id="turnosDropdown"
+      role="button"
+      data-bs-toggle="dropdown"
+      aria-expanded="false"
+    >
+      TURNOS
+    </a>
+    <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="turnosDropdown">
+      <li><a class="dropdown-item" routerLink="/turnos/solicitar">Ver mis turnos</a></li>
+      <li><a class="dropdown-item" routerLink="/turnos/solicitar">Pedir un turno</a></li>
+    </ul>
+  </li>
+
+  <li class="nav-item">
+    <a class="nav-link text-white" href="#">CONTACTO</a>
+  </li>
+</ul>
+
+      </div>
+
+      <!-- Botón sesión + menú hamburguesa -->
+      <div class="col-6 col-md-3 d-flex justify-content-end align-items-center">
+        <button class="btn btn-primary rounded-pill  d-none d-md-inline-block"  routerLink="/auth">
+          INICIAR SESIÓN
+        </button>
+
+        <!-- Botón hamburguesa (solo móvil) -->
+        <button
+          class="btn btn-outline-light d-md-none"
+          type="button"
+          data-bs-toggle="offcanvas"
+          data-bs-target="#mobileMenu"
+          aria-controls="mobileMenu"
+        >
+          <i class="bi bi-list fs-4"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- Menú Offcanvas (solo móvil) -->
+<div
+  class="offcanvas offcanvas-end text-bg-dark"
+  tabindex="-1"
+  id="mobileMenu"
+  aria-labelledby="mobileMenuLabel"
+>
+  <div class="offcanvas-header">
+    <h5 class="offcanvas-title" id="mobileMenuLabel">Menú</h5>
+    <button
+      type="button"
+      class="btn-close btn-close-white"
+      data-bs-dismiss="offcanvas"
+      aria-label="Close"
+    ></button>
+  </div>
+  <div class="offcanvas-body">
+    <ul class="nav flex-column text-center">
+      <li class="nav-item mb-2">
+        <a class="nav-link text-white" href="#">INSTITUCIONAL</a>
+      </li>
+      <li class="nav-item mb-2">
+        <a class="nav-link text-white" href="#">TURNOS</a>
+      </li>
+      <li class="nav-item mb-3">
+        <a class="nav-link text-white" href="#">CONTACTO</a>
+      </li>
+      <button class="btn btn-primary rounded-pill px-3">INICIAR SESIÓN</button>
+    </ul>
+  </div>
+</div>
+
+

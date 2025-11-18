@@ -47,45 +47,46 @@ export class HomeComponent implements OnInit {
 
   constructor(private firestore: Firestore, private router: Router) {}
 
-  // ===========================
-  // INIT
-  // ===========================
-  async ngOnInit() {
-    const auth = getAuth();
+  
+cargando: boolean = true;
+async ngOnInit() {
+  const auth = getAuth();
+
+  onAuthStateChanged(auth, async (user) => {
+    if (!user) {
+      this.router.navigate(['/auth']);
+      return;
+    }
+
     const db = getFirestore();
+    const userRef = doc(db, 'usuarios', user.uid);
+    const userSnap = await getDoc(userRef);
 
-    onAuthStateChanged(auth, async (user) => {
-      if (!user) {
-        this.router.navigate(['/auth']);
-        return;
-      }
+    if (!userSnap.exists()) {
+      signOut(auth);
+      this.router.navigate(['/auth']);
+      return;
+    }
 
-      // Obtener usuario
-      const userRef = doc(db, 'usuarios', user.uid);
-      const userSnap = await getDoc(userRef);
+    this.usuario = userSnap.data();
 
-      if (!userSnap.exists()) {
-        await signOut(auth);
-        this.router.navigate(['/auth']);
-        return;
-      }
+    // ya cargó todo
+    this.cargando = false;
 
-      this.usuario = userSnap.data();
+    // cargar usuarios + turnos
+    const usuariosSnap = await getDocs(collection(db, 'usuarios'));
+    this.usuarios = usuariosSnap.docs.map((d) => d.data());
 
-      // Obtener lista de usuarios
-      const usuariosSnap = await getDocs(collection(db, 'usuarios'));
-      this.usuarios = usuariosSnap.docs.map((d) => d.data());
+    const turnosSnap = await getDocs(collection(db, 'turnos'));
+    this.turnos = turnosSnap.docs.map((d) => ({ id: d.id, ...d.data() })) as any;
+    this.turnosFiltrados = [...this.turnos];
 
-      // Obtener turnos
-      const turnosSnap = await getDocs(collection(db, 'turnos'));
-      this.turnos = turnosSnap.docs.map((d) => ({ id: d.id, ...d.data() })) as Turno[];
-      this.turnosFiltrados = [...this.turnos];
+    if (this.usuario?.rol === 'paciente') {
+      this.misTurnos = this.turnos.filter(t => t.paciente === this.usuario.nombre);
+    }
+  });
+}
 
-      if (this.usuario?.rol === 'paciente') {
-        this.misTurnos = this.turnos.filter(t => t.paciente === this.usuario.nombre);
-      }
-    });
-  }
 
   // ===========================
   // LOGOUT
@@ -425,4 +426,67 @@ export class HomeComponent implements OnInit {
     this.fechaSeleccionada =
       this.fechaSeleccionada === fecha ? null : fecha;
   }
+
+
+  
+  // ===========================
+  // TOGGLE FECHA (ARREGLADO)
+  // ===========================
+
+  async cancelarTurno(index: number) {
+  const turno = this.misTurnos[index];
+  if (!turno) return;
+
+  const confirmar = await Swal.fire({
+    icon: 'warning',
+    title: '¿Cancelar turno?',
+    text: `¿Estás seguro de cancelar el turno del ${turno.fecha} a las ${turno.hora}?`,
+    showCancelButton: true,
+    confirmButtonText: 'Sí, cancelar',
+    cancelButtonText: 'No',
+    confirmButtonColor: '#d33',
+  });
+
+  if (!confirmar.isConfirmed) return;
+
+  try {
+    const db = getFirestore();
+    const turnoRef = doc(db, 'turnos', turno.id!);
+
+    // 🔹 Actualizar turno en Firestore
+    await updateDoc(turnoRef, {
+      estado: 'disponible',
+      paciente: null
+    });
+
+    // 🔹 Actualizar en pantalla
+    this.misTurnos.splice(index, 1);
+    this.turnos = this.turnos.map(t =>
+      t.id === turno.id ? { ...t, estado: 'disponible', paciente: null } : t
+    );
+
+    await Swal.fire({
+      icon: 'success',
+      title: 'Turno cancelado',
+      text: 'Tu turno fue cancelado correctamente.',
+      confirmButtonColor: '#00509e',
+    });
+
+  } catch (error) {
+    console.error('Error al cancelar turno:', error);
+
+    await Swal.fire({
+      icon: 'error',
+      title: 'Error',
+      text: 'No se pudo cancelar el turno.',
+      confirmButtonColor: '#b00020',
+    });
+  }
 }
+
+irASolicitar() {
+  this.router.navigate(['/solicitar-turno']);
+}
+
+}
+

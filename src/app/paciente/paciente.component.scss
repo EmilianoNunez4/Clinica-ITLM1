@@ -1,0 +1,151 @@
+
+$verde-claro: #e8f5e9;
+$verde-medio: #a5d6a7;
+$verde-oscuro: #2e7d32;
+$verde-acento: #66bb6a;
+
+.estado {
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-weight: 600;
+  display: inline-block;
+  text-transform: capitalize;
+  font-size: 0.9rem;
+}
+
+.estado.pendiente {
+  background-color: #fffde7;
+  color: #f9a825;
+  border: 1px solid #fdd835;
+}
+
+.estado.atendido {
+  background-color: #e8f5e9;
+  color: #2e7d32;
+  border: 1px solid #66bb6a;
+}
+
+.estado.cancelado {
+  background-color: #ffebee;
+  color: #c62828;
+  border: 1px solid #ef5350;
+}
+
+
+table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 8px;
+  margin: 1.5rem 0;
+
+  tr {
+    background: #ffffff;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+    border-radius: 8px;
+
+    td:first-child,
+    th:first-child {
+      border-radius: 8px 0 0 8px;
+    }
+
+    td:last-child,
+    th:last-child {
+      border-radius: 0 8px 8px 0;
+    }
+  }
+
+  th {
+    background-color: $verde-medio;
+    color: #fff;
+    padding: 10px;
+    text-align: center;
+    font-size: 0.95rem;
+  }
+
+  td {
+    padding: 12px;
+    text-align: center;
+    font-size: 0.9rem;
+  }
+
+  button {
+    margin: 0 5px;
+  }
+}
+
+
+.perfil {
+  background: $verde-claro;
+  padding: 15px;
+  border-radius: 10px;
+  border-left: 4px solid $verde-oscuro;
+  max-width: 350px;
+  margin-bottom: 20px;
+
+  p {
+    margin: 4px 0;
+    font-size: 0.95rem;
+  }
+}
+
+.solicitud {
+  background: #ffffff;
+  border: 1px solid $verde-medio;
+  border-radius: 10px;
+  padding: 15px;
+  max-width: 350px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
+
+  label {
+    font-weight: 600;
+    color: $verde-oscuro;
+  }
+
+  input, select {
+    padding: 8px;
+    border-radius: 6px;
+    border: 1px solid $verde-medio;
+    outline: none;
+    transition: 0.2s;
+
+    &:focus {
+      border-color: $verde-oscuro;
+      box-shadow: 0 0 4px rgba($verde-oscuro, 0.3);
+    }
+  }
+
+  button {
+    margin-top: 10px;
+    padding: 10px;
+    background: $verde-acento;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: 0.2s;
+
+    &:hover {
+      background: $verde-oscuro;
+    }
+  }
+}
+
+
+button {
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: none;
+  background: $verde-acento;
+  color: #fff;
+  cursor: pointer;
+  font-weight: 600;
+  transition: 0.2s;
+
+  &:hover {
+    background: $verde-oscuro;
+  }
+}
