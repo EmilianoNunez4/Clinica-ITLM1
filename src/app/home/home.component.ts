@@ -44,6 +44,7 @@ export class HomeComponent implements OnInit {
 
   constructor(private firestore: Firestore, private router: Router) {}
 
+  cerrandoSesion: boolean = false;
   cargando: boolean = true;
   async ngOnInit() {
     const auth = getAuth();
@@ -118,10 +119,18 @@ limpiarFiltroUsuarios() {
   // ===========================
   // LOGOUT
   // ===========================
-  async logout() {
+  logout() {
+    this.cerrandoSesion = true;
+
     const auth = getAuth();
-    await signOut(auth);
-    this.router.navigate(['/auth']);
+    signOut(auth).then(() => {
+      localStorage.removeItem('usuarioActual');
+
+      setTimeout(() => {
+        this.cargando = false;
+        this.router.navigate(['/auth']);
+      }, 800); // da tiempo al spinner
+    });
   }
 
   // ===========================
