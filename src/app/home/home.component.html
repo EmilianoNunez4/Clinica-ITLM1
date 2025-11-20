@@ -5,7 +5,7 @@
 ========================== -->
 <div *ngIf="cargando" class="spinner-container">
   <div class="spinner"></div>
-  <p>Cargando usuario...</p>
+  <p>Cargando perfil...</p>
 </div>
 
 <div *ngIf="!cargando && (!usuario || usuario.rol === 'paciente')">
@@ -297,7 +297,8 @@
 </div>
 
 <!-- SPINNER si no hay usuario cargado (fallback) -->
-<div *ngIf="!cargando && !usuario" class="spinner-container">
+<div *ngIf="cargando" class="spinner-container">
   <div class="spinner"></div>
   <p>Cargando perfil...</p>
 </div>
+
