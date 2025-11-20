@@ -36,7 +36,7 @@
                 <div class="turno-item"><div class="label">Estado</div><div class="value">{{ turno.estado }}</div></div>
               </div>
               <div class="turno-actions">
-                <button *ngIf="turno.estado !== 'atendido'" class="btn-attend" (click)="marcarAtendido(turno)" [disabled]="!turno.nombrePaciente">Marcar como Atendido</button>
+                <button *ngIf="turno.estado !== 'atendido'" class="btn-attend" (click)="marcarAtendido(turno)">Marcar como Atendido</button>
               </div>
             </article>
           </div>
