@@ -33,7 +33,7 @@ export class PacienteComponent implements OnInit {
   turnosFuturos: Turno[] = [];
   turnosPasados: Turno[] = [];
 
-  especialidades = ['Cardiología', 'Pediatría', 'Dermatología', 'Clínica Médica'];
+  especialidades = ['Pediatría', 'Dermatología', 'Clínica'];
 
   nuevaEspecialidad = '';
   nuevaFecha = '';
@@ -79,26 +79,49 @@ export class PacienteComponent implements OnInit {
     this.turnosPasados = lista.filter(t => t.estado === 'atendido' || t.estado === 'cancelado');
   }
 
-  async solicitarTurno() {
-    if (!this.nuevaEspecialidad || !this.nuevaFecha || !this.nuevaHora) {
-      alert("Complete todos los campos.");
-      return;
-    }
-
-    const turnosRef = collection(this.firestore, 'turnos');
-
-    await addDoc(turnosRef, {
-      fecha: this.nuevaFecha,
-      hora: this.nuevaHora,
-      especialidad: this.nuevaEspecialidad,
-      estado: 'pendiente',
-      uidPaciente: this.uid,
-      nombrePaciente: this.nombre
-    });
-
-    alert('Turno solicitado con éxito.');
-    await this.cargarTurnos();
+async solicitarTurno() {
+  if (!this.nuevaEspecialidad || !this.nuevaFecha || !this.nuevaHora) {
+    alert("Complete todos los campos.");
+    return;
   }
+
+  const turnosRef = collection(this.firestore, 'turnos');
+
+  // 1️⃣ Buscamos un turno generado por el admin
+  const q = query(
+    turnosRef,
+    where('especialidad', '==', this.nuevaEspecialidad),
+    where('fecha', '==', this.nuevaFecha),
+    where('hora', '==', this.nuevaHora),
+    where('estado', '==', 'disponible')
+  );
+
+  const snap = await getDocs(q);
+
+  // No existe turno disponible → no se crea uno nuevo
+  if (snap.empty) {
+    alert("No hay un turno disponible en ese horario.");
+    return;
+  }
+
+  // 2️⃣ Tomamos el primer turno encontrado
+  const turnoDoc = snap.docs[0];
+  const turnoRef = doc(this.firestore, 'turnos', turnoDoc.id);
+
+  // 3️⃣ Lo reservamos asignando el paciente
+  await updateDoc(turnoRef, {
+    uidPaciente: this.uid,
+    nombrePaciente: this.nombre,
+    estado: 'reservado'
+  });
+
+  alert("Turno reservado con éxito.");
+
+  // 4️⃣ Recargar turnos del paciente
+  await this.cargarTurnos();
+}
+
+
 
   async cancelarTurno(id: string) {
     const turnoRef = doc(this.firestore, 'turnos', id);
