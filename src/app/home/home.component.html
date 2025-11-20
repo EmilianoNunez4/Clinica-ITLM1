@@ -1,10 +1,4 @@
-<!-- Guardar en: src/app/home/home.component.html -->
-
-<!-- ==========================
-     SPINNER DE CARGA
-========================== -->
-
-<div *ngIf="!cargando && (!usuario || usuario.rol === 'paciente')">
+<div *ngIf="!cargando && !cerrandoSesion && (!usuario || usuario.rol === 'paciente')">
 
   <!-- NAV (visible para visitante y paciente) -->
   <app-navbar></app-navbar>
@@ -331,4 +325,10 @@
   <div class="spinner"></div>
   <p>Cargando perfil...</p>
 </div>
+
+<div *ngIf="cerrandoSesion" class="spinner-container">
+  <div class="spinner"></div>
+  <p>Cerrando sesión...</p>
+</div>
+
 
