@@ -64,9 +64,28 @@
 
       <!-- Botón sesión + menú hamburguesa -->
       <div class="col-6 col-md-3 d-flex justify-content-end align-items-center">
-        <button class="btn btn-primary rounded-pill  d-none d-md-inline-block"  routerLink="/auth">
+        <!-- SI NO ESTÁ LOGUEADO -->
+        <button
+          *ngIf="!usuario"
+          class="btn btn-primary rounded-pill d-none d-md-inline-block"
+          routerLink="/auth"
+        >
           INICIAR SESIÓN
         </button>
+
+        <!-- SI ESTÁ LOGUEADO -->
+        <button
+          *ngIf="usuario"
+          class="btn btn-danger rounded-pill d-none d-md-inline-block"
+          (click)="logout()"
+          routerLink="/home"
+        >
+          CERRAR SESIÓN
+        </button>
+        <div *ngIf="cargandoLogout" class="logout-spinner-overlay">
+          <div class="logout-spinner"></div>
+          <p class="logout-text">Cerrando sesión...</p>
+        </div>
 
         <!-- Botón hamburguesa (solo móvil) -->
         <button

@@ -1,209 +1,285 @@
-<app-navbar></app-navbar>
-<div id="heroCarousel" class="carousel slide" data-bs-ride="carousel">
-  <div class="carousel-inner">
+<!-- Guardar en: src/app/home/home.component.html -->
 
-    <!-- ITEM 1 -->
-    <div class="carousel-item active">
-      <div class="carousel-img-overlay">
-        <img src="assets/banner-principal.jpg" class="d-block w-100 hero-img" alt="Banner 1">
-
-        <!-- CONTENIDO SOBRE LA IMAGEN -->
-        <div class="carousel-caption text-start">
-          <div class="container">
-            <div class="row">
-              <div class="col-12 col-md-6">
-                <h1 class="fw-bold">Atención médica confiable y cercana</h1>
-                <p>
-                  En la Clínica ITLM te ofrecemos servicios de salud de calidad, con compromiso y un enfoque humano en cada consulta.
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-      </div>
-    </div>
-
-    <!-- ITEM 2 -->
-    <div class="carousel-item">
-      <div class="carousel-img-overlay">
-        <img src="assets/banner-2.jpg" class="d-block w-100 hero-img" alt="Banner 2">
-
-        <div class="carousel-caption text-start">
-          <div class="container">
-            <div class="row">
-              <div class="col-12 col-md-6">
-                <h1 class="fw-bold">Tu Salud<br>nuestra prioridad</h1>
-                <p>
-                Trabajamos para mejorar el bienestar de toda tu familia.
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-      </div>
-    </div>
-
-  </div>
-
-  <!-- INDICADORES -->
-  <div class="carousel-indicators">
-    <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="0" class="active"></button>
-    <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="1"></button>
-  </div>
+<!-- ==========================
+     SPINNER DE CARGA
+========================== -->
+<div *ngIf="cargando" class="spinner-container">
+  <div class="spinner"></div>
+  <p>Cargando usuario...</p>
 </div>
 
-<section class="py-5 bg-light">
-  <div class="container">
+<div *ngIf="!cargando && (!usuario || usuario.rol === 'paciente')">
 
-    <!-- PRESTIGIO -->
-    <div class="row mb-5">
-      <div class="col-12 text-center">
-        <h2 class="fw-bold">Prestigio y Excelencia Médica</h2>
-        <p class="mt-3">
-          A lo largo de más de 30 años de trayectoria en prestigio y excelencia médica,
-          nuestra Clinica ha forjado una tradición y filosofía de trabajo enfocadas
-          en la atención centrada en el paciente y su familia.
-        </p>
+  <!-- NAV (visible para visitante y paciente) -->
+  <app-navbar></app-navbar>
+
+  <!-- HERO / CARRUSEL (solo público/paciente) -->
+  <div id="heroCarousel" class="carousel slide" data-bs-ride="carousel" aria-label="Hero carousel">
+    <div class="carousel-inner">
+
+      <div class="carousel-item active">
+        <div class="carousel-img-overlay">
+          <img src="assets/banner-principal.jpg" class="d-block w-100 hero-img" alt="Banner 1">
+          <div class="carousel-caption text-start">
+            <div class="container">
+              <div class="row">
+                <div class="col-12 col-md-6">
+                  <h1 class="fw-bold">Atención médica confiable y cercana</h1>
+                  <p>En la Clínica ITLM te ofrecemos servicios de salud de calidad, con compromiso y un enfoque humano en cada consulta.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <div class="col-12 d-flex justify-content-center mt-4">
-        <img src="assets/equipo.jpg" class="img-fluid rounded shadow" style="max-width: 650px;">
+      <div class="carousel-item">
+        <div class="carousel-img-overlay">
+          <img src="assets/banner-2.jpg" class="d-block w-100 hero-img" alt="Banner 2">
+          <div class="carousel-caption text-start">
+            <div class="container">
+              <div class="row">
+                <div class="col-12 col-md-6">
+                  <h1 class="fw-bold">Tu Salud<br>nuestra prioridad</h1>
+                  <p>Trabajamos para mejorar el bienestar de toda tu familia.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
+
     </div>
 
-    <!-- MISIÓN -->
-    <div class="row mb-5">
-      <div class="col-12">
-        <h3 class="fw-bold">Misión</h3>
-        <p class="fw-semibold mt-2">¿Para qué estamos?</p>
-
-        <p>
-          Nuestra misión es brindar la más alta calidad médica en el ámbito más seguro y
-          de mayor contención posible, y con la aplicación de la tecnología más adecuada
-          para cada caso, ejerciendo una medicina basada en la evidencia científica y
-          buscando cada vez más ejercer una medicina centrada en el paciente.
-        </p>
-      </div>
+    <div class="carousel-indicators">
+      <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="0" class="active" aria-current="true"></button>
+      <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="1"></button>
     </div>
-
-    <!-- VISIÓN -->
-    <div class="row">
-      <div class="col-12">
-        <h3 class="fw-bold">Visión</h3>
-        <p class="fw-semibold mt-2">¿A dónde queremos llegar?</p>
-
-        <p>
-          Posicionar a la Clínica ITLM como una institución médica de excelencia en la región, reconocida por su calidad de atención, innovación en servicios de salud y enfoque humano. Aspiramos a ser un referente para pacientes y profesionales, ampliando nuestra capacidad y especialidades para brindar soluciones integrales y de alto nivel.
-        </p>
-      </div>
-    </div>
-
   </div>
-</section>
 
-<section class="py-5 bg-light">
-  <div class="container">
+  <!-- SECCIONES PÚBLICAS: Prestigio / Misión / Visión / Contacto -->
+  <section class="py-5 bg-light">
+    <div class="container">
+      <div class="row mb-5">
+        <div class="col-12 text-center">
+          <h2 class="fw-bold">Prestigio y Excelencia Médica</h2>
+          <p class="mt-3">A lo largo de más de 30 años de trayectoria en prestigio y excelencia médica, nuestra Clinica ha forjado una tradición y filosofía de trabajo enfocadas en la atención centrada en el paciente y su familia.</p>
+        </div>
 
-    <!-- Título -->
-    <div class="row mb-4">
-      <div class="col-12 text-center">
-        <h2 class="fw-bold">Contacto</h2>
-        <p class="text-muted">Estamos para ayudarte. Podés comunicarte con nosotros por los siguientes medios.</p>
+        <div class="col-12 d-flex justify-content-center mt-4">
+          <img src="assets/equipo.jpg" class="img-fluid rounded shadow" style="max-width: 650px;" alt="Equipo">
+        </div>
+      </div>
+
+      <div class="row mb-5">
+        <div class="col-12">
+          <h3 class="fw-bold">Misión</h3>
+          <p class="fw-semibold mt-2">¿Para qué estamos?</p>
+          <p>Nuestra misión es brindar la más alta calidad médica en el ámbito más seguro y de mayor contención posible, y con la aplicación de la tecnología más adecuada para cada caso.</p>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-12">
+          <h3 class="fw-bold">Visión</h3>
+          <p class="fw-semibold mt-2">¿A dónde queremos llegar?</p>
+          <p>Posicionar a la Clínica ITLM como una institución médica de excelencia en la región, reconocida por su calidad de atención, innovación en servicios de salud y enfoque humano.</p>
+        </div>
       </div>
     </div>
+  </section>
 
-    <div class="row">
-
-      <!-- MAPA + DATOS DE CONTACTO -->
-      <div class="col-12 col-md-6 mb-4">
-
-        <!-- Google Maps -->
-        <div class="rounded shadow overflow-hidden">
-          <iframe
-            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3285.141796449786!2d-58.40214922372568!3d-34.57501445791502!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x95bcb5bb4b3af39f%3A0x3f9f19f5a689b2b1!2sHospital%20General%20de%20Ni%C3%B1os%20Dr.%20Ricardo%20Guti%C3%A9rrez!5e0!3m2!1ses-419!2sar!4v1700000000000!5m2!1ses-419!2sar"
-            width="100%" height="300" style="border:0;" allowfullscreen="" loading="lazy"
-            referrerpolicy="no-referrer-when-downgrade">
-          </iframe>
-        </div>
-
-        <!-- INFO DE CONTACTO -->
-        <div class="mt-4">
-          <p><strong>E-mail:</strong> contacto&#64;clinica-itlm.com</p>
-          <p><strong>Teléfono:</strong> +54 11 3456-7890</p>
-          <p><strong>Dirección:</strong> Bogotá 115, Ciudad Autónoma de Buenos Aires, Argentina</p>
+  <!-- CONTACTO -->
+  <section class="py-5 bg-light">
+    <div class="container">
+      <div class="row mb-4">
+        <div class="col-12 text-center">
+          <h2 class="fw-bold">Contacto</h2>
+          <p class="text-muted">Podés comunicarte con nosotros por los siguientes medios.</p>
         </div>
       </div>
 
-      <!-- FORMULARIO DE CONTACTO -->
-      <div class="col-12 col-md-6">
+      <div class="row">
+        <div class="col-12 col-md-6 mb-4">
+          <div class="rounded shadow overflow-hidden">
+            <iframe
+              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3285.141796449786!2d-58.40214922372568!3d-34.57501445791502!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x95bcb5bb4b3af39f%3A0x3f9f19f5a689b2b1!2sHospital%20General%20de%20Ni%C3%B1os%20Dr.%20Ricardo%20Guti%C3%A9rrez!5e0!3m2!1ses-419!2sar!4v1700000000000!5m2!1ses-419!2sar"
+              width="100%" height="300" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade">
+            </iframe>
+          </div>
 
-        <div class="card shadow border-0">
-          <div class="card-body p-4">
+          <div class="mt-4">
+            <p><strong>E-mail:</strong> contacto&#64;clinica-itlm.com</p>
+            <p><strong>Teléfono:</strong> +54 11 3456-7890</p>
+            <p><strong>Dirección:</strong> Bogotá 115, Ciudad Autónoma de Buenos Aires, Argentina</p>
+          </div>
+        </div>
 
-            <h4 class="fw-bold mb-3">Envíanos tu consulta</h4>
-
-            <form>
-              <div class="mb-3">
-                <label class="form-label">Nombre completo</label>
-                <input type="text" class="form-control" placeholder="Tu nombre">
-              </div>
-
-              <div class="mb-3">
-                <label class="form-label">Correo electrónico</label>
-                <input type="email" class="form-control" placeholder="Tu email">
-              </div>
-
-              <div class="mb-3">
-                <label class="form-label">Mensaje</label>
-                <textarea class="form-control" rows="4" placeholder="Escribe tu mensaje aquí"></textarea>
-              </div>
-
-              <button type="submit" class="btn btn-primary w-100 rounded-pill">
-                Enviar mensaje
-              </button>
-            </form>
-
+        <div class="col-12 col-md-6">
+          <div class="card shadow border-0">
+            <div class="card-body p-4">
+              <h4 class="fw-bold mb-3">Envíanos tu consulta</h4>
+              <form (submit)="$event.preventDefault()">
+                <div class="mb-3">
+                  <label class="form-label">Nombre completo</label>
+                  <input type="text" class="form-control" placeholder="Tu nombre">
+                </div>
+                <div class="mb-3">
+                  <label class="form-label">Correo electrónico</label>
+                  <input type="email" class="form-control" placeholder="Tu email">
+                </div>
+                <div class="mb-3">
+                  <label class="form-label">Mensaje</label>
+                  <textarea class="form-control" rows="4" placeholder="Escribe tu mensaje aquí"></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary w-100 rounded-pill">Enviar mensaje</button>
+              </form>
+            </div>
           </div>
         </div>
 
       </div>
-
     </div>
+  </section>
 
-  </div>
-</section>
+  <!-- OBRAS SOCIALES -->
+  <section class="obras-sociales py-5">
+    <div class="container text-center">
+      <h2 class="section-title">OBRAS SOCIALES</h2>
+      <div class="underline mx-auto mb-4"></div>
 
-<!-- OBRAS SOCIALES -->
-<section class="obras-sociales py-5">
-  <div class="container text-center">
-    <h2 class="section-title">OBRAS SOCIALES</h2>
-    <div class="underline mx-auto mb-4"></div>
-
-    <div id="logosCarousel" class="carousel slide" data-bs-ride="carousel">
-      <div class="carousel-inner">
-
-        <!-- SLIDE 1 -->
-        <div class="carousel-item active">
-          <div class="row justify-content-center align-items-center">
-
-            <div class="col-12 col-sm-6 col-md-3 mb-4">
-              <img src="assets/medicus.jpg" class="logo-img img-fluid" alt="Obra Social 1">
+      <div id="logosCarousel" class="carousel slide" data-bs-ride="carousel">
+        <div class="carousel-inner">
+          <div class="carousel-item active">
+            <div class="row justify-content-center align-items-center">
+              <div class="col-6 col-sm-4 col-md-3 mb-4">
+                <img src="assets/medicus.jpg" class="logo-img img-fluid" alt="Obra Social 1">
+              </div>
+              <div class="col-6 col-sm-4 col-md-3 mb-4">
+                <img src="assets/sancorsalud.jpg" class="logo-img img-fluid" alt="Obra Social 2">
+              </div>
+              <div class="col-6 col-sm-4 col-md-3 mb-4">
+                <img src="assets/smg.jpg" class="logo-img img-fluid" alt="Obra Social 3">
+              </div>
+              <div class="col-6 col-sm-4 col-md-3 mb-4">
+                <img src="assets/hominis.jpg" class="logo-img img-fluid" alt="Obra Social 4">
+              </div>
             </div>
+          </div>
+        </div>
 
-            <div class="col-12 col-sm-6 col-md-3 mb-4">
-              <img src="assets/sancorsalud.jpg" class="logo-img img-fluid" alt="Obra Social 2">
+        <button class="carousel-control-prev" type="button" data-bs-target="#logosCarousel" data-bs-slide="prev">
+          <span class="carousel-control-prev-icon custom-arrow" aria-hidden="true"></span>
+        </button>
+        <button class="carousel-control-next" type="button" data-bs-target="#logosCarousel" data-bs-slide="next">
+          <span class="carousel-control-next-icon custom-arrow" aria-hidden="true"></span>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER para visitante y paciente -->
+  <app-footer></app-footer>
+</div>
+
+
+<!-- ==========================
+     PANEL ADMIN (solo admin)
+========================== -->
+<div *ngIf="!cargando && usuario?.rol === 'admin'" class="admin-layout">
+  <aside class="admin-sidebar">
+    <h2 class="logo">Panel Admin</h2>
+    <nav>
+      <ul>
+        <li>
+          <button (click)="seccionActiva = 'usuarios'" [class.active]="seccionActiva === 'usuarios'">Usuarios</button>
+        </li>
+        <li>
+          <button (click)="seccionActiva = 'turnos'" [class.active]="seccionActiva === 'turnos'">Turnos</button>
+        </li>
+        <li>
+          <button (click)="seccionActiva = 'reportes'" [class.active]="seccionActiva === 'reportes'">Reportes</button>
+        </li>
+        <li class="logout-item">
+          <button (click)="logout()">Cerrar sesión</button>
+        </li>
+      </ul>
+    </nav>
+  </aside>
+
+  <main class="admin-content">
+    <section *ngIf="seccionActiva === 'usuarios'">
+      <h1>Gestión de Usuarios</h1>
+      <div class="tabla">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Nombre</th>
+              <th>Email</th>
+              <th>Rol</th>
+              <th>Estado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let u of usuarios; let i = index">
+              <td>{{ u.nombre }}</td>
+              <td>{{ u.email }}</td>
+              <td>{{ u.rol }}</td>
+              <td [class.inactivo]="u.activo === false">
+                {{ u.activo === false ? 'Inactivo' : 'Activo' }}
+              </td>
+              <td>
+                <button class="btn btn-sm btn-primary me-1" (click)="cambiarRol(i)">Cambiar rol</button>
+                <button class="btn btn-sm btn-warning me-1" *ngIf="u.rol === 'medico'" (click)="asignarEspecialidad(i)">Asignar especialidad</button>
+                <button class="btn btn-sm btn-secondary me-1" *ngIf="u.rol === 'medico'" (click)="reasignarTurnosAMedico(i)">Reasignar turnos</button>
+                <button class="btn btn-sm btn-danger me-1" *ngIf="u.activo !== false" (click)="darBaja(i)">Dar de baja</button>
+                <button class="btn btn-sm btn-success" *ngIf="u.activo === false" (click)="reactivarUsuario(i)">Reactivar</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section *ngIf="seccionActiva === 'turnos'" class="turnos-admin1">
+      <div class="turnos-header d-flex justify-content-between align-items-center mb-3">
+        <h2>Gestión de Turnos</h2>
+        <button class="btn btn-danger" (click)="generarTurnos()">GENERAR TURNOS (14 DÍAS)</button>
+      </div>
+
+      <!-- filtros y lista de turnos (usa tus funciones existentes) -->
+      <div class="filtros-turnos mb-3">
+        <input type="text" placeholder="Buscar por especialidad..." [(ngModel)]="filtroEspecialidad" (input)="filtrarTurnos()" class="form-control mb-2" />
+        <input type="date" [(ngModel)]="filtroFecha" (change)="filtrarTurnos()" class="form-control mb-2" />
+        <button class="btn btn-outline-secondary" (click)="limpiarFiltros()">Limpiar</button>
+      </div>
+
+      <div *ngIf="turnosFiltrados.length; else noTurnos" class="lista-turnos">
+        <div *ngFor="let fecha of obtenerFechasUnicas(turnosFiltrados)" class="item-dia mb-3">
+          <div class="cabecera-dia d-flex justify-content-between align-items-center p-3 bg-white rounded shadow-sm">
+            <div>
+              <h5 class="mbc-0">{{ fecha | date:'fullDate' }}</h5>
+              <small class="text-muted">{{ obtenerTurnosPorFecha(fecha, turnosFiltrados).length }} turnos</small>
             </div>
-
-            <div class="col-12 col-sm-6 col-md-3 mb-4">
-              <img src="assets/smg.jpg" class="logo-img img-fluid" alt="Obra Social 3">
+            <div>
+              <button class="btn btn-sm btn-outline-primary" (click)="toggleFecha(fecha)">Ver horarios</button>
             </div>
+          </div>
 
-            <div class="col-12 col-sm-6 col-md-3 mb-4">
-              <img src="assets/hominis.jpg" class="logo-img img-fluid" alt="Obra Social 4">
+          <div *ngIf="fechaSeleccionada === fecha" class="horarios-dia mt-2">
+            <div *ngFor="let t of obtenerTurnosPorFecha(fecha, turnosFiltrados); let i = index" class="card mb-2 p-2">
+              <div class="d-flex justify-content-between align-items-center">
+                <div>
+                  <strong>{{ t.hora }}</strong> — {{ t.especialidad }}
+                </div>
+                <div>
+                  <button class="btn btn-sm btn-outline-secondary me-1" (click)="editarCampo(i, 'hora'); $event.stopPropagation()">Horario</button>
+                  <button class="btn btn-sm btn-outline-secondary me-1" (click)="editarCampo(i, 'especialidad'); $event.stopPropagation()">Especialidad</button>
+                  <button class="btn btn-sm btn-outline-secondary" (click)="editarCampo(i, 'estado'); $event.stopPropagation()">Estado</button>
+                </div>
+              </div>
             </div>
-
           </div>
         </div>
       </div>
@@ -213,7 +289,6 @@
       </ng-template>
     </section>
 
-    <!-- REPORTES -->
     <section *ngIf="seccionActiva === 'reportes'">
       <h2>Mas secciones</h2>
       <p>Próximamente...</p>
@@ -221,41 +296,8 @@
   </main>
 </div>
 
-<!-- PANEL USUARIO / MÉDICO -->
-<div *ngIf="!usuario" class="spinner-container">
+<!-- SPINNER si no hay usuario cargado (fallback) -->
+<div *ngIf="!cargando && !usuario" class="spinner-container">
   <div class="spinner"></div>
   <p>Cargando perfil...</p>
 </div>
-
-  <section *ngIf="usuario?.rol === 'paciente'" class="paciente-container">
-
-            <div class="col-12 col-sm-6 col-md-3 mb-4">
-              <img src="assets/osde.jpg" class="logo-img img-fluid" alt="Obra Social 8">
-            </div>
-
-          </div>
-        </div>
-
-      </div>
-
-      <!-- CONTROLES -->
-      <button class="carousel-control-prev" type="button" data-bs-target="#logosCarousel" data-bs-slide="prev">
-        <span class="carousel-control-prev-icon custom-arrow" aria-hidden="true"></span>
-      </button>
-
-      <button class="carousel-control-next" type="button" data-bs-target="#logosCarousel" data-bs-slide="next">
-        <span class="carousel-control-next-icon custom-arrow" aria-hidden="true"></span>
-      </button>
-
-    </div>
-  </div>
-</section>
-
-
-
-<div *ngIf="usuario && usuario.rol !== 'admin'" class="user-layout">
-  <h2>Bienvenido {{ usuario.nombre }}</h2>
-  <p>Interfaz de {{ usuario.rol }}</p>
-</div>
-
-  <app-footer *ngIf="usuario?.rol === 'paciente'"></app-footer>

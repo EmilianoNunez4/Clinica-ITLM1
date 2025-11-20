@@ -53,27 +53,30 @@ async ngOnInit() {
   const auth = getAuth();
 
   onAuthStateChanged(auth, async (user) => {
+
+    // 👉 Si NO hay usuario logueado, dejar ver el home sin paneles
     if (!user) {
-      this.router.navigate(['/auth']);
+      this.usuario = null;
+      this.cargando = false;
       return;
     }
 
+    // 👉 Si hay usuario logueado, cargamos datos
     const db = getFirestore();
     const userRef = doc(db, 'usuarios', user.uid);
     const userSnap = await getDoc(userRef);
 
+    // Usuario inválido → logout + login
     if (!userSnap.exists()) {
-      signOut(auth);
+      await signOut(auth);
       this.router.navigate(['/auth']);
       return;
     }
 
     this.usuario = userSnap.data();
-
-    // ya cargó todo
     this.cargando = false;
 
-    // cargar usuarios + turnos
+    // 👉 Carga de datos SOLO para usuarios logueados
     const usuariosSnap = await getDocs(collection(db, 'usuarios'));
     this.usuarios = usuariosSnap.docs.map((d) => d.data());
 
@@ -81,12 +84,12 @@ async ngOnInit() {
     this.turnos = turnosSnap.docs.map((d) => ({ id: d.id, ...d.data() })) as any;
     this.turnosFiltrados = [...this.turnos];
 
+    // Turnos solo del paciente
     if (this.usuario?.rol === 'paciente') {
       this.misTurnos = this.turnos.filter(t => t.paciente === this.usuario.nombre);
     }
   });
 }
-
 
   // ===========================
   // LOGOUT
