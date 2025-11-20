@@ -27,7 +27,7 @@
       <div *ngIf="!verHistorial">
         <div *ngIf="turnosActivos.length > 0; else noActive">
           <div class="turnos-list">
-            <article *ngFor="let turno of turnosActivos" class="turno-card" [class.removing]="removingTurnos.has(turno.id)">
+            <article *ngFor="let turno of turnosActivos" class="turno-card" [class.removing]="removingTurnos.has(turno.id)" [class.con-paciente]="turno.nombrePaciente" [class.sin-paciente]="!turno.nombrePaciente">
               <div class="turno-grid">
                 <div class="turno-item"><div class="label">Fecha</div><div class="value">{{ turno.fecha }}</div></div>
                 <div class="turno-item"><div class="label">Hora</div><div class="value">{{ turno.hora }}</div></div>
@@ -36,7 +36,7 @@
                 <div class="turno-item"><div class="label">Estado</div><div class="value">{{ turno.estado }}</div></div>
               </div>
               <div class="turno-actions">
-                <button *ngIf="turno.estado !== 'atendido'" class="btn-attend" (click)="marcarAtendido(turno)">Marcar como Atendido</button>
+                <button *ngIf="turno.estado !== 'atendido'" class="btn-attend" (click)="marcarAtendido(turno)" [disabled]="!turno.nombrePaciente">Marcar como Atendido</button>
               </div>
             </article>
           </div>

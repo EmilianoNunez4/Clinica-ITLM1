@@ -158,7 +158,39 @@ body{
   .nav-btn { padding: 8px 10px; font-size:0.92rem }
 }
 
+/* CARD SIN PACIENTE */
+.turno-card.sin-paciente {
+  background: #f4f4f4;
+  border-left: 5px solid #bdbdbd;
+  opacity: 0.85;
+}
 
+/* CARD CON PACIENTE */
+.turno-card.con-paciente {
+  background: #e8ffe8; /* verde suave */
+  border-left: 5px solid #2ecc71;
+  transform: scale(1.01);
+  transition: 0.2s ease;
+}
 
+/* BOTÓN ATENDER */
+.btn-attend {
+  padding: 10px 15px;
+  border-radius: 8px;
+  border: none;
+  background: #2196f3;
+  color: white;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
 
+.btn-attend:hover:not([disabled]) {
+  background: #1976d2;
+}
 
+.btn-attend[disabled] {
+  background: #cccccc !important;
+  cursor: not-allowed;
+  color: #666;
+  opacity: 0.7;
+}
