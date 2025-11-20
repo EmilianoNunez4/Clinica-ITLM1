@@ -7,10 +7,6 @@ import { AuthComponent } from './auth/auth.component';
 import { HomeComponent } from './home/home.component';
 import { SolicitarComponent } from './turnos/solicitar/solicitar.component';
 
-
-
-
-
 // nuevo es la importacion de firebase
 import { provideFirebaseApp, initializeApp } from '@angular/fire/app';
 import { provideAuth, getAuth } from '@angular/fire/auth';
@@ -23,6 +19,13 @@ import { FooterComponent } from './components/footer/footer.component';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { MedicoComponent } from './medico/medico.component';
 import { PacienteComponent } from './paciente/paciente.component';
+
+import { LOCALE_ID } from '@angular/core';
+import { registerLocaleData } from '@angular/common';
+import localeEs from '@angular/common/locales/es';
+
+registerLocaleData(localeEs);
+
 
 @NgModule({
   declarations: [
@@ -48,6 +51,7 @@ import { PacienteComponent } from './paciente/paciente.component';
     provideFirestore(() => getFirestore()),
     provideStorage(() => getStorage()),
     provideAnimationsAsync(),
+    { provide: LOCALE_ID, useValue: 'es' }
   ],
   bootstrap: [AppComponent]
 })

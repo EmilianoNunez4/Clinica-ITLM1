@@ -202,15 +202,36 @@ form label {
   font-weight: 600;
 }
 
+.admin-layout {
+  overflow-x: hidden !important;
+}
+
+.admin-content {
+  max-width: 100% !important;
+  overflow-x: hidden !important;
+}
+
+.table {
+  width: 95% !important;
+  word-wrap: break-word;
+}
+
+.table button {
+  white-space: nowrap;
+}
+
+.admin-content h1{
+  font-size: 2rem;
+}
+
 /* Sidebar */
 .admin-sidebar {
-  width: 250px;
   background: #002b5b;
   color: #fff;
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 1.5rem 1rem;
+  padding: 1.5rem 3rem;
   box-shadow: 2px 0 8px rgba(0, 0, 0, 0.2);
   position: fixed;
   left: 0;
@@ -346,6 +367,7 @@ form label {
       border-color: rgb(50, 205, 50);
     }
 }
+
 
 .inactivo {
   color: red;
@@ -654,4 +676,53 @@ form label {
       background: #bbb;
     }
   }
+}
+
+/* ================================
+   BOTONES DE ACCIÓN — COMBINADOS
+================================ */
+
+/* Horario — Azul Profesional */
+.lista-turnos .card button.btn-outline-secondary:nth-child(1) {
+  border-color: #0055aa !important;
+  color: #0055aa !important;
+  font-weight: 600;
+  transition: 0.2s ease;
+  border-width: 2px;
+}
+
+.lista-turnos .card button.btn-outline-secondary:nth-child(1):hover {
+  background-color: #0055aa !important;
+  color: white !important;
+  transform: translateY(-2px);
+}
+
+/* Especialidad — Verde Suave */
+.lista-turnos .card button.btn-outline-secondary:nth-child(2) {
+  border-color: #2e9f5b !important;
+  color: #2e9f5b !important;
+  font-weight: 600;
+  transition: 0.2s ease;
+  border-width: 2px;
+}
+
+.lista-turnos .card button.btn-outline-secondary:nth-child(2):hover {
+  background-color: #2e9f5b !important;
+  color: white !important;
+  transform: translateY(-2px);
+}
+
+/* Estado — Ámbar Elegante */
+.lista-turnos .card button.btn-outline-secondary:nth-child(3) {
+  border-color: #c58a00 !important;
+  color: #c58a00 !important;
+  font-weight: 600;
+  transition: 0.2s ease;
+  border-width: 2px;
+}
+
+.lista-turnos .card button.btn-outline-secondary:nth-child(3):hover {
+  background-color: #c58a00 !important;
+  color: white !important;
+  transform: translateY(-2px);
 }

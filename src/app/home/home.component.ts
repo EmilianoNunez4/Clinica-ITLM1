@@ -1,21 +1,12 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, LOCALE_ID } from '@angular/core';
 import { Router } from '@angular/router';
 import { getAuth, signOut, onAuthStateChanged } from 'firebase/auth';
-import {
-  Firestore,
-  collection,
-  getDocs,
-  deleteDoc,
-  doc,
-  getFirestore,
-  getDoc,
-  setDoc,
-  updateDoc,
-  addDoc,
-  query,
-  where
-} from '@angular/fire/firestore';
+import { Firestore, collection, getDocs, deleteDoc, doc, getFirestore, getDoc, setDoc, updateDoc, addDoc, query, where } from '@angular/fire/firestore';
 import Swal from 'sweetalert2';
+
+import { registerLocaleData } from '@angular/common';
+import localeEs from '@angular/common/locales/es';
+registerLocaleData(localeEs);
 
 interface Turno {
   id?: string;
@@ -45,49 +36,83 @@ export class HomeComponent implements OnInit {
   filtroFecha: string = '';
   seccionActiva: string = 'usuarios';
 
+  filtroRol: string = '';
+  filtroEspecialidadUsuario: string = '';
+  usuariosFiltrados: any[] = [];
+  especialidadesUnicas: string[] = [];
+
+
   constructor(private firestore: Firestore, private router: Router) {}
 
-  
-cargando: boolean = true;
-async ngOnInit() {
-  const auth = getAuth();
+  cargando: boolean = true;
+  async ngOnInit() {
+    const auth = getAuth();
 
-  onAuthStateChanged(auth, async (user) => {
-    
-    if (!user) {
-      // No redirige. Solo apaga el spinner y listo.
-      this.usuario = null;
+    onAuthStateChanged(auth, async (user) => {
+
+      if (!user) {
+        this.usuario = null;
+        this.cargando = false;
+        return;
+      }
+
+      const db = getFirestore();
+      const userRef = doc(db, 'usuarios', user.uid);
+      const userSnap = await getDoc(userRef);
+
+      if (!userSnap.exists()) {
+        signOut(auth);
+        this.usuario = null;
+        this.cargando = false;
+        return;
+      }
+
+      this.usuario = userSnap.data();
       this.cargando = false;
-      return;
-    }
 
-    // Si está logueado, si cargo perfil
-    const db = getFirestore();
-    const userRef = doc(db, 'usuarios', user.uid);
-    const userSnap = await getDoc(userRef);
+      const usuariosSnap = await getDocs(collection(db, 'usuarios'));
+      this.usuarios = usuariosSnap.docs.map((d) => d.data());
 
-    if (!userSnap.exists()) {
-      signOut(auth);
-      this.usuario = null;
-      this.cargando = false;
-      return;
-    }
+      this.usuariosFiltrados = [...this.usuarios];
 
-    this.usuario = userSnap.data();
-    this.cargando = false;
+// sacar especialidades únicas de usuarios médicos
+this.especialidadesUnicas = Array.from(
+  new Set(
+    this.usuarios
+      .filter(u => u.rol === 'medico' && u.especialidad)
+      .map(u => u.especialidad)
+  )
+);
 
-    // SOLO cargar datos cuando haya sesión
-    const usuariosSnap = await getDocs(collection(db, 'usuarios'));
-    this.usuarios = usuariosSnap.docs.map((d) => d.data());
 
-    const turnosSnap = await getDocs(collection(db, 'turnos'));
-    this.turnos = turnosSnap.docs.map((d) => ({ id: d.id, ...d.data() })) as any;
-    this.turnosFiltrados = [...this.turnos];
+      const turnosSnap = await getDocs(collection(db, 'turnos'));
+      this.turnos = turnosSnap.docs.map((d) => ({ id: d.id, ...d.data() })) as any;
+      this.turnosFiltrados = [...this.turnos];
 
-    if (this.usuario?.rol === 'paciente') {
-      this.misTurnos = this.turnos.filter(t => t.paciente === this.usuario.nombre);
-    }
+      if (this.usuario?.rol === 'paciente') {
+        this.misTurnos = this.turnos.filter(t => t.paciente === this.usuario.nombre);
+      }
+    });
+  }
+
+  filtrarUsuarios() {
+  this.usuariosFiltrados = this.usuarios.filter(u => {
+
+    const coincideRol =
+      this.filtroRol === '' || u.rol === this.filtroRol;
+
+    const coincideEsp =
+      this.filtroEspecialidadUsuario === '' ||
+      (u.rol === 'medico' && u.especialidad === this.filtroEspecialidadUsuario);
+
+    return coincideRol && coincideEsp;
   });
+}
+
+limpiarFiltroUsuarios() {
+  this.filtroRol = '';
+  this.filtroEspecialidadUsuario = '';
+  this.usuariosFiltrados = [...this.usuarios];
 }
 
   // ===========================
@@ -150,7 +175,10 @@ async ngOnInit() {
   async cambiarRol(index: number) {
     const order = ['paciente', 'medico', 'admin'];
     const u = this.usuarios[index];
-    if (!u) return alert('Usuario no encontrado.');
+    if (!u) {
+      Swal.fire('Error', 'Usuario no encontrado.', 'error');
+      return;
+    }
 
     const currentRol = u.rol || 'paciente';
     const nextRol = order[(order.indexOf(currentRol) + 1) % order.length];
@@ -158,34 +186,48 @@ async ngOnInit() {
     const admins = this.usuarios.filter(x => x.rol === 'admin');
 
     if (currentRol === 'admin' && admins.length === 1 && nextRol !== 'admin') {
-      return alert('Debe quedar al menos un administrador.');
+      Swal.fire('Advertencia', 'Debe quedar al menos un administrador.', 'warning');
+      return;
     }
 
-    u.rol = nextRol;
+    const confirm = await Swal.fire({
+      title: '¿Cambiar rol?',
+      text: `Nuevo rol: ${nextRol}`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Cambiar',
+      cancelButtonText: 'Cancelar'
+    });
+
+    if (!confirm.isConfirmed) return;
 
     try {
       const ref = doc(this.firestore, 'usuarios', u.uid);
       await updateDoc(ref, { rol: nextRol });
+
+      u.rol = nextRol;
 
       if (this.usuario?.uid === u.uid) {
         this.usuario.rol = nextRol;
         localStorage.setItem('usuarioActual', JSON.stringify(this.usuario));
       }
 
-      alert(`Rol cambiado a ${nextRol}`);
+      Swal.fire('Éxito', `Rol cambiado a ${nextRol}`, 'success');
+
     } catch (err) {
       console.error(err);
+      Swal.fire('Error', 'No se pudo cambiar el rol.', 'error');
     }
   }
 
-  // ===========================
-  // ASIGNAR ESPECIALIDAD A MÉDICO
-  // ===========================
+// ===========================
+// ASIGNAR ESPECIALIDAD A MÉDICO
+// ===========================
   async asignarEspecialidad(index: number) {
     const u = this.usuarios[index];
     if (!u || u.rol !== 'medico') return;
 
-    const especialidadesDisponibles = ['Clínica', 'Pediatría', 'Dermatología', 'Cardiología', 'Neurología'];
+    const especialidadesDisponibles = ['Clínica', 'Pediatría', 'Dermatología'];
 
     const { value: nuevaEspecialidad } = await Swal.fire({
       title: `Asignar especialidad a ${u.nombre}`,
@@ -216,181 +258,185 @@ async ngOnInit() {
   // ===========================
   // REASIGNAR TURNOS A UN MÉDICO (ADMIN)
   // ===========================
-  async reasignarTurnosAMedico(index: number) {
-    const u = this.usuarios[index];
-    if (!u || u.rol !== 'medico') return;
+async reasignarTurnosAMedico(index: number) {
+  const u = this.usuarios[index];
 
-    if (!confirm(`¿Reasignar todos los turnos de la especialidad "${u.especialidad}" a ${u.nombre}? Esto actualizará el campo uidMedico en los turnos.`)) return;
+  const confirm = await Swal.fire({
+    title: '¿Reasignar turnos?',
+    text: `Esto reasignará los turnos de la especialidad "${u.especialidad}" al médico ${u.nombre}.`,
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonText: 'Reasignar',
+    cancelButtonText: 'Cancelar'
+  });
 
-    try {
-      const turnosSnap = await getDocs(
-        query(collection(this.firestore as any, 'turnos'), where('especialidad', '==', u.especialidad))
-      );
+  if (!confirm.isConfirmed) return;
 
-      let actualizado = 0;
-      for (const docSnap of turnosSnap.docs) {
-        const data: any = docSnap.data();
-        // Solo actualizar si no coincide
-        if (!data.uidMedico || data.uidMedico !== u.uid) {
-          const ref = doc(this.firestore, 'turnos', docSnap.id);
-          await updateDoc(ref, { uidMedico: u.uid });
-          actualizado++;
-        }
+  try {
+    const turnosSnap = await getDocs(
+      query(collection(this.firestore as any, 'turnos'), where('especialidad', '==', u.especialidad))
+    );
+
+    let actualizado = 0;
+
+    for (const docSnap of turnosSnap.docs) {
+      const data: any = docSnap.data();
+      if (!data.uidMedico || data.uidMedico !== u.uid) {
+        const ref = doc(this.firestore, 'turnos', docSnap.id);
+        await updateDoc(ref, { uidMedico: u.uid });
+        actualizado++;
       }
-
-      Swal.fire('Hecho', `Se reasignaron ${actualizado} turnos a ${u.nombre}.`, 'success');
-    } catch (err) {
-      console.error(err);
-      Swal.fire('Error', 'No se pudieron reasignar los turnos.', 'error');
     }
+
+    Swal.fire('Éxito', `Se reasignaron ${actualizado} turnos.`, 'success');
+
+  } catch (err) {
+    console.error(err);
+    Swal.fire('Error', 'No se pudieron reasignar los turnos.', 'error');
   }
+}
 
   // ===========================
   // DAR DE BAJA
   // ===========================
-  async darBaja(index: number) {
-    const u = this.usuarios[index];
-    if (!u) return;
+async darBaja(index: number) {
+  const u = this.usuarios[index];
 
-    if (!confirm(`¿Dar de baja a ${u.nombre}?`)) return;
+  const confirm = await Swal.fire({
+    title: '¿Dar de baja?',
+    text: `El usuario ${u.nombre} quedará inactivo.`,
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonText: 'Dar de baja',
+    confirmButtonColor: '#d33',
+    cancelButtonText: 'Cancelar'
+  });
 
-    try {
-      const ref = doc(this.firestore, 'usuarios', u.uid);
-      await updateDoc(ref, { activo: false, estado: 'inactivo' });
+  if (!confirm.isConfirmed) return;
 
-      this.usuarios[index] = { ...u, activo: false, estado: 'inactivo' };
-      alert('Usuario dado de baja');
-    } catch (err) {
-      console.error(err);
-    }
+  try {
+    const ref = doc(this.firestore, 'usuarios', u.uid);
+    await updateDoc(ref, { activo: false, estado: 'inactivo' });
+
+    this.usuarios[index] = { ...u, activo: false, estado: 'inactivo' };
+
+    Swal.fire('Hecho', 'Usuario dado de baja.', 'success');
+
+  } catch (err) {
+    console.error(err);
+    Swal.fire('Error', 'No se pudo dar de baja.', 'error');
   }
+}
 
-  // ===========================
-  // REACTIVAR USUARIO
-  // ===========================
-  async reactivarUsuario(index: number) {
-    const u = this.usuarios[index];
-    if (!u) return;
+// ===========================
+// REACTIVAR USUARIO
+// ===========================
+async reactivarUsuario(index: number) {
+  const u = this.usuarios[index];
 
-    if (!confirm(`¿Reactivar a ${u.nombre}?`)) return;
+  const confirm = await Swal.fire({
+    title: '¿Reactivar usuario?',
+    text: `${u.nombre} volverá a estar activo.`,
+    icon: 'question',
+    showCancelButton: true,
+    confirmButtonText: 'Reactivar',
+    cancelButtonText: 'Cancelar'
+  });
 
-    try {
-      const ref = doc(this.firestore, 'usuarios', u.uid);
-      await updateDoc(ref, { activo: true, estado: 'activo' });
+  if (!confirm.isConfirmed) return;
 
-      this.usuarios[index] = { ...u, activo: true, estado: 'activo' };
-      alert('Usuario reactivado');
-    } catch (err) {
-      console.error(err);
-    }
+  try {
+    const ref = doc(this.firestore, 'usuarios', u.uid);
+    await updateDoc(ref, { activo: true, estado: 'activo' });
+
+    this.usuarios[index] = { ...u, activo: true, estado: 'activo' };
+
+    Swal.fire('Hecho', 'Usuario reactivado.', 'success');
+
+  } catch (err) {
+    console.error(err);
+    Swal.fire('Error', 'No se pudo reactivar.', 'error');
   }
+}
 
   // ===========================
-  // GENERAR TURNOS
+  // GENERAR TURNOS (ARREGLADO)
   // ===========================
   async generarTurnos() {
+
+    // SOLO 6 TURNOS POR DÍA
     const horarios = ['09:00', '10:30', '12:00', '13:30', '15:00', '16:30'];
     const diasAGenerar = 14;
 
     const db = getFirestore();
 
-    // Obtener todos los médicos para ver qué especialidades existen
-    const todosLosMedicosSnap = await getDocs(
+    const medicosSnap = await getDocs(
       query(collection(db, 'usuarios'), where('rol', '==', 'medico'))
     );
-    const todosLosMedicos = todosLosMedicosSnap.docs.map(doc => ({
+
+    const medicos = medicosSnap.docs.map(doc => ({
       uid: doc.id,
       ...(doc.data() as any)
     }));
 
-    console.log('🏥 Médicos encontrados en la BD:', todosLosMedicos.length, todosLosMedicos.map(m => ({ uid: m.uid, nombre: m.nombre, especialidad: m.especialidad })));
+    const especialidades = Array.from(
+      new Set(medicos.map(m => m.especialidad).filter(e => e))
+    );
 
-    // Extraer especialidades únicas que tienen los médicos
-    const especialidadesExistentes = Array.from(
-      new Set(
-        todosLosMedicos
-          .map(m => m.especialidad)
-          .filter(e => e && typeof e === 'string' && e.trim().length > 0)
-      )
-    ) as string[];
-
-    console.log('🔬 Especialidades encontradas en médicos:', especialidadesExistentes);
-
-    if (especialidadesExistentes.length === 0) {
-      Swal.fire('Advertencia', 'No hay médicos con especialidades asignadas. Asigna especialidades a los médicos primero.', 'warning');
+    if (especialidades.length === 0) {
+      Swal.fire('Advertencia', 'No hay médicos con especialidades asignadas.', 'warning');
       return;
     }
 
-    for (const especialidad of especialidadesExistentes) {
-      // Obtener todos los médicos con esta especialidad
-      const medicosSnap = await getDocs(
-        query(
-          collection(db, 'usuarios'),
-          where('rol', '==', 'medico'),
-          where('especialidad', '==', especialidad)
-        )
-      );
+    for (const especialidad of especialidades) {
 
-      const medicos = medicosSnap.docs.map(docSnap => ({
-        uid: docSnap.id,
-        ...docSnap.data()
-      }));
+      const medicosEsp = medicos.filter(m => m.especialidad === especialidad);
+      if (medicosEsp.length === 0) continue;
 
-      console.log(`📋 Médicos para especialidad "${especialidad}":`, medicos.length, medicos.map(m => ({ uid: m.uid, nombre: (m as any).nombre })));
-
-      if (medicos.length === 0) {
-        console.warn(`No hay médicos para la especialidad ${especialidad}`);
-        continue;
-      }
+      let fechasGeneradas = 0;
+      let diasPasados = 0;
+      let offset = 0; // rotación de médicos
 
       const hoy = new Date();
-      let fechasGeneradas = 0;
-      let diasContados = 0;
-      let dayOffset = 0; // controla qué médico inicia ese día
 
       while (fechasGeneradas < diasAGenerar) {
+
         const fecha = new Date(hoy);
-        fecha.setDate(hoy.getDate() + diasContados);
+        fecha.setDate(hoy.getDate() + diasPasados);
+
         const diaSemana = fecha.getDay();
-
-        // Saltar sábados (6) y domingos (0)
         if (diaSemana !== 0 && diaSemana !== 6) {
-          const fechaStr = fecha.toISOString().split('T')[0];
+          const fechaStr = fecha.toISOString().split("T")[0];
 
-          // Calcular el índice inicial para este día (rotación cíclica)
-          const startIndex = dayOffset % medicos.length;
-
-          // Crear un turno para cada horario de este día
+          // CREA SOLO 6 TURNOS (uno por cada horario)
           for (let i = 0; i < horarios.length; i++) {
-            const medicoIndex = (startIndex + i) % medicos.length;
-            const medicoSeleccionado = medicos[medicoIndex];
+
+            const medico = medicosEsp[(offset + i) % medicosEsp.length];
 
             const turno: Turno = {
               fecha: fechaStr,
               hora: horarios[i],
-              especialidad: especialidad,
+              especialidad,
               estado: 'disponible',
-              uidMedico: medicoSeleccionado.uid
+              uidMedico: medico.uid
             };
 
-            const turnosRef = collection(db, 'turnos');
-            await addDoc(turnosRef, turno);
+            await addDoc(collection(db, 'turnos'), turno);
           }
 
           fechasGeneradas++;
-          dayOffset++; // Al día siguiente, la rotación comienza con el siguiente médico
+          offset++;
         }
 
-        diasContados++;
+        diasPasados++;
       }
     }
 
-    // Recargar turnos después de generar
-    const turnosSnap = await getDocs(collection(db, 'turnos'));
-    this.turnos = turnosSnap.docs.map((d) => ({ id: d.id, ...d.data() })) as Turno[];
+    const turnosSnap2 = await getDocs(collection(db, 'turnos'));
+    this.turnos = turnosSnap2.docs.map(d => ({ id: d.id, ...d.data() })) as Turno[];
     this.turnosFiltrados = [...this.turnos];
 
-    Swal.fire('Éxito', 'Turnos generados correctamente con asignación de médicos', 'success');
+    Swal.fire('Éxito', 'Turnos generados correctamente.', 'success');
   }
 
   // ===========================
@@ -421,74 +467,64 @@ async ngOnInit() {
     return turnos.filter(t => t.fecha === fecha).sort((a, b) => a.hora.localeCompare(b.hora));
   }
 
-  // ===========================
-  // TOGGLE FECHA (ARREGLADO)
-  // ===========================
   toggleFecha(fecha: string) {
-    this.fechaSeleccionada =
-      this.fechaSeleccionada === fecha ? null : fecha;
+    this.fechaSeleccionada = this.fechaSeleccionada === fecha ? null : fecha;
   }
 
-
-  
   // ===========================
-  // TOGGLE FECHA (ARREGLADO)
+  // CANCELAR TURNO
   // ===========================
-
   async cancelarTurno(index: number) {
-  const turno = this.misTurnos[index];
-  if (!turno) return;
+    const turno = this.misTurnos[index];
+    if (!turno) return;
 
-  const confirmar = await Swal.fire({
-    icon: 'warning',
-    title: '¿Cancelar turno?',
-    text: `¿Estás seguro de cancelar el turno del ${turno.fecha} a las ${turno.hora}?`,
-    showCancelButton: true,
-    confirmButtonText: 'Sí, cancelar',
-    cancelButtonText: 'No',
-    confirmButtonColor: '#d33',
-  });
-
-  if (!confirmar.isConfirmed) return;
-
-  try {
-    const db = getFirestore();
-    const turnoRef = doc(db, 'turnos', turno.id!);
-
-    // 🔹 Actualizar turno en Firestore
-    await updateDoc(turnoRef, {
-      estado: 'disponible',
-      paciente: null
+    const confirmar = await Swal.fire({
+      icon: 'warning',
+      title: '¿Cancelar turno?',
+      text: `¿Estás seguro de cancelar el turno del ${turno.fecha} a las ${turno.hora}?`,
+      showCancelButton: true,
+      confirmButtonText: 'Sí, cancelar',
+      cancelButtonText: 'No',
+      confirmButtonColor: '#d33',
     });
 
-    // 🔹 Actualizar en pantalla
-    this.misTurnos.splice(index, 1);
-    this.turnos = this.turnos.map(t =>
-      t.id === turno.id ? { ...t, estado: 'disponible', paciente: null } : t
-    );
+    if (!confirmar.isConfirmed) return;
 
-    await Swal.fire({
-      icon: 'success',
-      title: 'Turno cancelado',
-      text: 'Tu turno fue cancelado correctamente.',
-      confirmButtonColor: '#00509e',
-    });
+    try {
+      const db = getFirestore();
+      const turnoRef = doc(db, 'turnos', turno.id!);
 
-  } catch (error) {
-    console.error('Error al cancelar turno:', error);
+      await updateDoc(turnoRef, {
+        estado: 'disponible',
+        paciente: null
+      });
 
-    await Swal.fire({
-      icon: 'error',
-      title: 'Error',
-      text: 'No se pudo cancelar el turno.',
-      confirmButtonColor: '#b00020',
-    });
+      this.misTurnos.splice(index, 1);
+      this.turnos = this.turnos.map(t =>
+        t.id === turno.id ? { ...t, estado: 'disponible', paciente: null } : t
+      );
+
+      await Swal.fire({
+        icon: 'success',
+        title: 'Turno cancelado',
+        text: 'Tu turno fue cancelado correctamente.',
+        confirmButtonColor: '#00509e',
+      });
+
+    } catch (error) {
+      console.error('Error al cancelar turno:', error);
+
+      await Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'No se pudo cancelar el turno.',
+        confirmButtonColor: '#b00020',
+      });
+    }
   }
-}
 
-irASolicitar() {
-  this.router.navigate(['/solicitar-turno']);
-}
+  irASolicitar() {
+    this.router.navigate(['/solicitar-turno']);
+  }
 
 }
-

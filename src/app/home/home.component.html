@@ -3,10 +3,6 @@
 <!-- ==========================
      SPINNER DE CARGA
 ========================== -->
-<div *ngIf="cargando" class="spinner-container">
-  <div class="spinner"></div>
-  <p>Cargando perfil...</p>
-</div>
 
 <div *ngIf="!cargando && (!usuario || usuario.rol === 'paciente')">
 
@@ -211,30 +207,64 @@
     <section *ngIf="seccionActiva === 'usuarios'">
       <h1>Gestión de Usuarios</h1>
       <div class="tabla">
+        <div class="d-flex gap-3 mb-3">
+
+          <!-- FILTRO POR ROL -->
+          <select class="form-select w-auto"
+                  [(ngModel)]="filtroRol"
+                  (change)="filtrarUsuarios()">
+            <option value="">Rol (todos)</option>
+            <option value="paciente">paciente</option>
+            <option value="medico">medico</option>
+            <option value="admin">admin</option>
+          </select>
+
+          <!-- FILTRO POR ESPECIALIDAD -->
+          <select class="form-select w-auto"
+                  [(ngModel)]="filtroEspecialidadUsuario"
+                  (change)="filtrarUsuarios()">
+            <option value="">Especialidad (todas)</option>
+            <option *ngFor="let esp of especialidadesUnicas" [value]="esp">
+              {{ esp }}
+            </option>
+          </select>
+          <button class="btn btn-outline-secondary" (click)="limpiarFiltroUsuarios()">
+            Limpiar filtros
+          </button>
+        </div>
         <table class="table">
           <thead>
             <tr>
               <th>Nombre</th>
               <th>Email</th>
               <th>Rol</th>
+              <th>Especialidad</th>
               <th>Estado</th>
               <th>Acciones</th>
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let u of usuarios; let i = index">
+            <tr *ngFor="let u of usuariosFiltrados; let i = index">
               <td>{{ u.nombre }}</td>
               <td>{{ u.email }}</td>
               <td>{{ u.rol }}</td>
+              <td>
+              <ng-container *ngIf="u.rol === 'medico'; else noEsMedico">
+                {{ u.especialidad }}
+              </ng-container>
+              <ng-template #noEsMedico>
+                Paciente
+              </ng-template>
+              </td>
               <td [class.inactivo]="u.activo === false">
                 {{ u.activo === false ? 'Inactivo' : 'Activo' }}
               </td>
               <td>
                 <button class="btn btn-sm btn-primary me-1" (click)="cambiarRol(i)">Cambiar rol</button>
-                <button class="btn btn-sm btn-warning me-1" *ngIf="u.rol === 'medico'" (click)="asignarEspecialidad(i)">Asignar especialidad</button>
-                <button class="btn btn-sm btn-secondary me-1" *ngIf="u.rol === 'medico'" (click)="reasignarTurnosAMedico(i)">Reasignar turnos</button>
                 <button class="btn btn-sm btn-danger me-1" *ngIf="u.activo !== false" (click)="darBaja(i)">Dar de baja</button>
                 <button class="btn btn-sm btn-success" *ngIf="u.activo === false" (click)="reactivarUsuario(i)">Reactivar</button>
+                <button class="btn btn-sm btn-warning me-1" *ngIf="u.rol === 'medico'" (click)="asignarEspecialidad(i)">Asignar especialidad</button>
+                <button class="btn btn-sm btn-secondary me-1" *ngIf="u.rol === 'medico'" (click)="reasignarTurnosAMedico(i)">Reasignar turnos</button>
               </td>
             </tr>
           </tbody>
