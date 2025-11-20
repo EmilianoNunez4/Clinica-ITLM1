@@ -32,6 +32,8 @@ export class MedicoComponent implements OnInit {
   nombre: string = '';
   verHistorial = false;
   usuarioActual: any = null; // ✅ agregamos esto para evitar error en HTML
+  removingTurnos: Set<string> = new Set();
+  processingTurnos: Set<string> = new Set();
 
   constructor(private router: Router) {}
 
@@ -67,23 +69,64 @@ export class MedicoComponent implements OnInit {
 
   async cargarTurnos() {
     const turnosRef = collection(this.firestore, 'turnos');
+    // Query: turnos asignados a este médico
     const q = query(turnosRef, where('uidMedico', '==', this.uid));
     const snapshot = await getDocs(q);
+
+    console.log('📌 cargarTurnos: UID del médico logueado:', this.uid);
+    console.log('📌 cargarTurnos: documentos obtenidos por query uidMedico=', this.uid, ' -> ', snapshot.size);
+    
+    // Logs adicionales: obtener TODOS los turnos sin filtro para ver estructura
+    const allTurnosSnap = await getDocs(collection(this.firestore, 'turnos'));
+    console.log('📄 TODOS los turnos en la BD (hasta 10):', allTurnosSnap.docs.slice(0, 10).map(d => ({
+      id: d.id,
+      uidMedico: (d.data() as any).uidMedico,
+      estado: (d.data() as any).estado,
+      fecha: (d.data() as any).fecha,
+      especialidad: (d.data() as any).especialidad
+    })));
+    
+    if (snapshot.empty) {
+      console.warn('⚠️ cargarTurnos: snapshot vacío — no se encontraron turnos con uidMedico igual a', this.uid);
+    }
 
     const todosLosTurnos: Turno[] = snapshot.docs.map((docSnap) => {
       const data: any = docSnap.data();
       const fecha = data.fecha instanceof Timestamp ? data.fecha.toDate().toISOString().split('T')[0] : data.fecha;
 
-      return {
+      // Normalizar nombre de paciente: el código en otros componentes usa 'paciente'
+      const nombrePaciente = data.nombrePaciente ?? data.paciente ?? null;
+      const uidPaciente = data.uidPaciente ?? data.uidPaciente ?? data.uidPaciente ?? null;
+
+      const mapped: any = {
         id: docSnap.id,
         ...data,
-        fecha // ahora es un string YYYY-MM-DD si venía como Timestamp
-      } as Turno;
+        fecha,
+        nombrePaciente,
+        uidPaciente,
+      };
+
+      return mapped as Turno;
     }) as Turno[];
 
-  // Mostrar sólo los turnos disponibles para este médico
-  this.turnosActivos = todosLosTurnos.filter(t => t.estado === 'disponible');
+    // Log de ejemplo para debugging (hasta 6 docs)
+    console.log('📄 ejemplo turnos (hasta 6):', snapshot.docs.slice(0, 6).map(d => ({ id: d.id, ...d.data() })));
+
+    // Ordenar cronológicamente: por fecha asc, luego hora asc
+    todosLosTurnos.sort((a, b) => {
+      const fechaCmp = a.fecha.localeCompare(b.fecha);
+      return fechaCmp !== 0 ? fechaCmp : a.hora.localeCompare(b.hora);
+    });
+
+    // Mostrar los turnos activos para este médico: todos los que NO estén marcados como 'atendido'
+    // (incluye 'disponible' y 'reservado' para que el médico vea los turnos que reservaron pacientes)
+    this.turnosActivos = todosLosTurnos.filter(t => t.estado !== 'atendido');
     this.turnosAtendidos = todosLosTurnos.filter(t => t.estado === 'atendido');
+
+    // Logs para debugging rápido
+    console.log('🔎 turnos totales encontrados:', todosLosTurnos.length);
+    console.log('🔹 turnos activos (no atendidos):', this.turnosActivos.length);
+    console.log('🔸 turnos atendidos:', this.turnosAtendidos.length);
 
     console.log('📅 Turnos activos:', this.turnosActivos);
     console.log('📅 Turnos atendidos:', this.turnosAtendidos);
@@ -93,6 +136,39 @@ export class MedicoComponent implements OnInit {
     const turnoRef = doc(this.firestore, 'turnos', turnoId);
     await updateDoc(turnoRef, { estado: nuevoEstado });
     await this.cargarTurnos();
+  }
+
+  // Animación visual: marcar como atendido con efecto, quitar de la lista activa y mover a atendidos
+  async marcarAtendido(turno: Turno) {
+    if (!turno?.id) return;
+    const id = turno.id;
+    // marcar localmente para animación
+    this.removingTurnos.add(id);
+
+    // Marcar como processing para deshabilitar el botón y mostrar spinner
+    this.processingTurnos.add(id);
+
+    // Esperar la animación (350ms)
+    setTimeout(async () => {
+      try {
+        const turnoRef = doc(this.firestore, 'turnos', id);
+        await updateDoc(turnoRef, { estado: 'atendido' });
+
+        // actualizar arrays locales
+        this.turnosActivos = this.turnosActivos.filter(t => t.id !== id);
+        const atendido = { ...turno, estado: 'atendido' } as Turno;
+        this.turnosAtendidos = [atendido, ...this.turnosAtendidos].sort((a, b) => {
+          const fechaCmp = a.fecha.localeCompare(b.fecha);
+          return fechaCmp !== 0 ? fechaCmp : a.hora.localeCompare(b.hora);
+        });
+      } catch (err) {
+        console.error('Error marcando turno como atendido', err);
+      } finally {
+        // Limpiar estado de animación y processing
+        this.removingTurnos.delete(id);
+        this.processingTurnos.delete(id);
+      }
+    }, 360);
   }
 
   cerrarSesion() {

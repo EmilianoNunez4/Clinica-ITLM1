@@ -206,22 +206,28 @@
 
           </div>
         </div>
+      </div>
 
-        <!-- SLIDE 2 -->
-        <div class="carousel-item">
-          <div class="row justify-content-center align-items-center">
+      <ng-template #noTurnos>
+        <p class="no-turnos">No hay turnos generados.</p>
+      </ng-template>
+    </section>
 
-            <div class="col-12 col-sm-6 col-md-3 mb-4">
-              <img src="assets/galeno.jpg" class="logo-img img-fluid" alt="Obra Social 5">
-            </div>
+    <!-- REPORTES -->
+    <section *ngIf="seccionActiva === 'reportes'">
+      <h2>Mas secciones</h2>
+      <p>Próximamente...</p>
+    </section>
+  </main>
+</div>
 
-            <div class="col-12 col-sm-6 col-md-3 mb-4">
-              <img src="assets/medicals.jpg" class="logo-img img-fluid" alt="Obra Social 6">
-            </div>
+<!-- PANEL USUARIO / MÉDICO -->
+<div *ngIf="!usuario" class="spinner-container">
+  <div class="spinner"></div>
+  <p>Cargando perfil...</p>
+</div>
 
-            <div class="col-12 col-sm-6 col-md-3 mb-4">
-              <img src="assets/medife.jpg" class="logo-img img-fluid" alt="Obra Social 7">
-            </div>
+  <section *ngIf="usuario?.rol === 'paciente'" class="paciente-container">
 
             <div class="col-12 col-sm-6 col-md-3 mb-4">
               <img src="assets/osde.jpg" class="logo-img img-fluid" alt="Obra Social 8">
@@ -247,5 +253,9 @@
 
 
 
+<div *ngIf="usuario && usuario.rol !== 'admin'" class="user-layout">
+  <h2>Bienvenido {{ usuario.nombre }}</h2>
+  <p>Interfaz de {{ usuario.rol }}</p>
+</div>
 
-<app-footer></app-footer>
+  <app-footer *ngIf="usuario?.rol === 'paciente'"></app-footer>
