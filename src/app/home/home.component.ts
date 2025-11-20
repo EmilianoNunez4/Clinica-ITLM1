@@ -41,16 +41,19 @@ export class HomeComponent implements OnInit {
   usuariosFiltrados: any[] = [];
   especialidadesUnicas: string[] = [];
 
-
-  constructor(private firestore: Firestore, private router: Router) {}
-
   cerrandoSesion: boolean = false;
   cargando: boolean = true;
+  logoutEnProgreso: boolean = false;
+
+  constructor(private firestore: Firestore, private router: Router) {}
   
-  async ngOnInit() {
+async ngOnInit() {
     const auth = getAuth();
 
     onAuthStateChanged(auth, async (user) => {
+
+      // 🔥 EVITAR QUE VUELVA AL HOME TRAS LOGOUT
+      if (this.logoutEnProgreso) return;
 
       if (!user) {
         this.usuario = null;
@@ -72,31 +75,31 @@ export class HomeComponent implements OnInit {
       this.usuario = userSnap.data();
       this.cargando = false;
 
+      // USUARIOS
       const usuariosSnap = await getDocs(collection(db, 'usuarios'));
-      this.usuarios = usuariosSnap.docs.map((d) => d.data());
-
+      this.usuarios = usuariosSnap.docs.map(d => d.data());
       this.usuariosFiltrados = [...this.usuarios];
 
-// sacar especialidades únicas de usuarios médicos
-this.especialidadesUnicas = Array.from(
-  new Set(
-    this.usuarios
-      .filter(u => u.rol === 'medico' && u.especialidad)
-      .map(u => u.especialidad)
-  )
-);
+      // ESPECIALIDADES ÚNICAS
+      this.especialidadesUnicas = Array.from(
+        new Set(
+          this.usuarios
+            .filter(u => u.rol === 'medico' && u.especialidad)
+            .map(u => u.especialidad)
+        )
+      );
 
-
+      // TURNOS
       const turnosSnap = await getDocs(collection(db, 'turnos'));
-      this.turnos = turnosSnap.docs.map((d) => ({ id: d.id, ...d.data() })) as any;
+      this.turnos = turnosSnap.docs.map(d => ({ id: d.id, ...d.data() })) as Turno[];
       this.turnosFiltrados = [...this.turnos];
 
+      // TURNOS DEL PACIENTE
       if (this.usuario?.rol === 'paciente') {
         this.misTurnos = this.turnos.filter(t => t.paciente === this.usuario.nombre);
       }
     });
   }
-
   filtrarUsuarios() {
   this.usuariosFiltrados = this.usuarios.filter(u => {
 
@@ -121,18 +124,20 @@ limpiarFiltroUsuarios() {
   // LOGOUT
   // ===========================
   logout() {
-    this.cerrandoSesion = true;
+    this.logoutEnProgreso = true;   // ⭐ evita rebote al home
+    this.cerrandoSesion = true;     // muestra spinner
 
     const auth = getAuth();
+
     signOut(auth).then(() => {
       localStorage.removeItem('usuarioActual');
 
       setTimeout(() => {
-        this.cargando = false;
         this.router.navigate(['/auth']);
-      }, 800); // da tiempo al spinner
+      }, 1200);
     });
   }
+
 
   // ===========================
   // EDITAR CAMPO TURNO
