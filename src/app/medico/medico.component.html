@@ -3,7 +3,10 @@
     <div class="sidebar-top">
       <div class="brand">CLINICA</div>
       <div class="greeting">
-        <h1 class="greeting-title">{{ ((nombre || '').slice(-1).toLowerCase() === 'a') ? 'Bienvenida Dra.' : 'Bienvenido Dr.' }}<span class="greeting-name"> {{ nombre }}</span></h1>
+        <h1 class="greeting-title">
+          {{ ((nombre || '').slice(-1).toLowerCase() === 'a') ? 'Bienvenida Dra.' : 'Bienvenido Dr.' }}
+          <span class="greeting-name"> {{ nombre }}</span>
+        </h1>
       </div>
     </div>
 
@@ -23,11 +26,19 @@
     </header>
 
     <section class="turnos-section">
+      
       <!-- Turnos Activos -->
       <div *ngIf="!verHistorial">
         <div *ngIf="turnosActivos.length > 0; else noActive">
           <div class="turnos-list">
-            <article *ngFor="let turno of turnosActivos" class="turno-card" [class.removing]="removingTurnos.has(turno.id)" [class.con-paciente]="turno.nombrePaciente" [class.sin-paciente]="!turno.nombrePaciente">
+
+            <article
+              *ngFor="let turno of turnosActivos"
+              class="turno-card"
+              [class.removing]="removingTurnos.has(turno.id)"
+              [class.con-paciente]="turno.nombrePaciente"
+              [class.sin-paciente]="!turno.nombrePaciente"
+            >
               <div class="turno-grid">
                 <div class="turno-item"><div class="label">Fecha</div><div class="value">{{ turno.fecha }}</div></div>
                 <div class="turno-item"><div class="label">Hora</div><div class="value">{{ turno.hora }}</div></div>
@@ -35,12 +46,22 @@
                 <div class="turno-item"><div class="label">Especialidad</div><div class="value">{{ turno.especialidad }}</div></div>
                 <div class="turno-item"><div class="label">Estado</div><div class="value">{{ turno.estado }}</div></div>
               </div>
+
               <div class="turno-actions">
-                <button *ngIf="turno.estado !== 'atendido'" class="btn-attend" (click)="marcarAtendido(turno)">Marcar como Atendido</button>
+                <button
+                  *ngIf="turno.estado !== 'atendido'"
+                  class="btn-attend"
+                  (click)="marcarAtendido(turno)"
+                  [disabled]="!turno.nombrePaciente"
+                >
+                  Marcar como Atendido
+                </button>
               </div>
             </article>
+
           </div>
         </div>
+
         <ng-template #noActive>
           <div class="empty">No hay turnos activos.</div>
         </ng-template>
@@ -61,13 +82,12 @@
             </article>
           </div>
         </div>
+
         <ng-template #noHist>
           <div class="empty">No hay atenciones registradas.</div>
         </ng-template>
       </div>
+
     </section>
   </main>
 </div>
-
-
-

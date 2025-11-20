@@ -46,6 +46,7 @@ export class HomeComponent implements OnInit {
 
   cerrandoSesion: boolean = false;
   cargando: boolean = true;
+  
   async ngOnInit() {
     const auth = getAuth();
 
