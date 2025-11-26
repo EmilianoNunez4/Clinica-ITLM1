@@ -34,7 +34,7 @@
       <div class="col-md-6 d-none d-md-block">
         <ul class="nav justify-content-end align-items-center">
   <li class="nav-item">
-    <a class="nav-link text-white" href="#">INSTITUCIONAL</a>
+    <a class="nav-link text-white" routerLink="/home" fragment="institucional">INSTITUCIONAL</a>
   </li>
 
   <!-- Dropdown de Turnos -->
@@ -51,12 +51,12 @@
     </a>
     <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="turnosDropdown">
       <li><a class="dropdown-item" routerLink="/turnos/solicitar">Ver mis turnos</a></li>
-      <li><a class="dropdown-item" routerLink="/turnos/solicitar">Pedir un turno</a></li>
+      <li><a class="dropdown-item" routerLink="/turnos/solicitar">Solicitar un turno</a></li>
     </ul>
   </li>
 
   <li class="nav-item">
-    <a class="nav-link text-white" href="#">CONTACTO</a>
+    <a class="nav-link text-white" routerLink="/home" fragment="contacto">CONTACTO</a>
   </li>
 </ul>
 
@@ -118,20 +118,58 @@
       aria-label="Close"
     ></button>
   </div>
-  <div class="offcanvas-body">
-    <ul class="nav flex-column text-center">
-      <li class="nav-item mb-2">
-        <a class="nav-link text-white" href="#">INSTITUCIONAL</a>
-      </li>
-      <li class="nav-item mb-2">
-        <a class="nav-link text-white" href="#">TURNOS</a>
-      </li>
-      <li class="nav-item mb-3">
-        <a class="nav-link text-white" href="#">CONTACTO</a>
-      </li>
-      <button class="btn btn-primary rounded-pill px-3">INICIAR SESIÓN</button>
-    </ul>
-  </div>
+<div class="offcanvas-body">
+  <ul class="nav flex-column text-center">
+
+    <li class="nav-item mb-2">
+      <a class="nav-link text-white" routerLink="/home" fragment="institucional">
+        INSTITUCIONAL
+      </a>
+    </li>
+
+    <!-- TURNOS – versión móvil con dropdown -->
+    <li class="nav-item mb-2">
+      <button
+        class="btn btn-outline-light w-100 d-flex justify-content-center align-items-center"
+        data-bs-toggle="collapse"
+        data-bs-target="#turnosMobile"
+        aria-expanded="false"
+        aria-controls="turnosMobile"
+      >
+        TURNOS
+        <i class="bi bi-chevron-down"></i>
+      </button>
+
+      <!-- Submenú desplegable -->
+      <div class="collapse mt-2" id="turnosMobile">
+        <ul class="nav flex-column">
+          <li class="nav-item">
+            <a class="nav-link text-white" routerLink="/turnos/solicitar">
+              Ver mis turnos
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link text-white" routerLink="/turnos/solicitar">
+              Solicitar un turno
+            </a>
+          </li>
+        </ul>
+      </div>
+    </li>
+
+    <li class="nav-item mb-3">
+      <a class="nav-link text-white" routerLink="/home" fragment="contacto">
+        CONTACTO
+      </a>
+    </li>
+
+    <button class="btn btn-primary rounded-pill px-3">
+      INICIAR SESIÓN
+    </button>
+
+  </ul>
+</div>
+
 </div>
 
 

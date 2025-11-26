@@ -31,7 +31,7 @@
   <hr />
 
   <!-- 🔹 Mis turnos reservados -->
-  <section>
+  <section id="Turnos">
     <h2>Mis turnos reservados</h2>
     <div *ngIf="misTurnos.length; else sinReservas">
       <div class="turno" *ngFor="let t of misTurnos; let i = index">
