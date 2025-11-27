@@ -8,14 +8,19 @@ import { MedicoComponent } from './medico/medico.component';
 
 const routes: Routes = [
   { path: '', redirectTo: 'home', pathMatch: 'full' },
-  { path: 'home', component: HomeComponent, },
+  { path: 'home', component: HomeComponent },
   { path: 'auth', component: AuthComponent },
   { path: 'turnos/solicitar', component: SolicitarComponent, canActivate: [AuthGuard] },
-  {path: 'medico', component: MedicoComponent, canActivate: [AuthGuard] }
+  { path: 'medico', component: MedicoComponent, canActivate: [AuthGuard] }
 ];
 
 @NgModule({
-  imports: [RouterModule.forRoot(routes)],
+  imports: [
+    RouterModule.forRoot(routes, {
+      anchorScrolling: 'enabled',
+      scrollOffset: [0, 80]  // agregado
+    })
+  ],
   exports: [RouterModule]
 })
 export class AppRoutingModule { }

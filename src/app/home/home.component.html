@@ -7,39 +7,57 @@
   <div id="heroCarousel" class="carousel slide" data-bs-ride="carousel" aria-label="Hero carousel">
     <div class="carousel-inner">
 
-      <div class="carousel-item active">
-        <div class="carousel-img-overlay">
-          <img src="assets/banner-principal.jpg" class="d-block w-100 hero-img" alt="Banner 1">
-          <div class="carousel-caption text-start">
-            <div class="container">
-              <div class="row">
-                <div class="col-12 col-md-6">
-                  <h1 class="fw-bold">Atención médica confiable y cercana</h1>
-                  <p>En la Clínica ITLM te ofrecemos servicios de salud de calidad, con compromiso y un enfoque humano en cada consulta.</p>
-                </div>
-              </div>
+  <!-- Slide 1 -->
+  <div class="carousel-item active">
+    <div class="carousel-img-overlay">
+      <img src="assets/banner-principal.jpg" class="d-block w-100 hero-img" alt="Banner 1">
+      <div class="carousel-caption text-start">
+        <div class="container">
+          <div class="row">
+            <div class="col-12 col-md-6">
+              <h1 class="fw-bold pt-5">Atención médica confiable y cercana</h1>
+              <p>En la Clínica ITLM te ofrecemos servicios de salud de calidad, con compromiso y un enfoque humano en cada consulta.</p>
+
+              <!-- 🔵 BOTÓN AÑADIDO -->
+              <a routerLink="/turnos/solicitar" class="btn btn-primary btn-lg mt-0 rounded-pill px-4">
+                ¡Pedí tu turno acá!
+              </a>
+              <!-- 🔵 FIN BOTÓN -->
+
             </div>
           </div>
         </div>
       </div>
-
-      <div class="carousel-item">
-        <div class="carousel-img-overlay">
-          <img src="assets/banner-2.jpg" class="d-block w-100 hero-img" alt="Banner 2">
-          <div class="carousel-caption text-start">
-            <div class="container">
-              <div class="row">
-                <div class="col-12 col-md-6">
-                  <h1 class="fw-bold">Tu Salud<br>nuestra prioridad</h1>
-                  <p>Trabajamos para mejorar el bienestar de toda tu familia.</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
     </div>
+  </div>
+
+  <!-- Slide 2 -->
+  <div class="carousel-item">
+    <div class="carousel-img-overlay">
+      <img src="assets/banner-2.jpg" class="d-block w-100 hero-img" alt="Banner 2">
+      <div class="carousel-caption text-start">
+        <div class="container">
+          <div class="row">
+            <div class="col-12 col-md-6">
+              <h1 class="fw-bold pt-5">Tu Salud<br>nuestra prioridad</h1>
+              <p>Trabajamos para mejorar el bienestar de toda tu familia.</p>
+
+              <!-- 🔵 BOTÓN AÑADIDO -->
+              <a routerLink="/turnos/solicitar" class="btn btn-primary btn-lg mt-3 rounded-pill px-4">
+                Ver mis turnos
+              </a>
+              <!-- 🔵 FIN BOTÓN -->
+
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+
 
     <div class="carousel-indicators">
       <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="0" class="active" aria-current="true"></button>
@@ -48,7 +66,7 @@
   </div>
 
   <!-- SECCIONES PÚBLICAS: Prestigio / Misión / Visión / Contacto -->
-  <section class="py-5 bg-light">
+  <section id="institucional" class="py-5 bg-light">
     <div class="container">
       <div class="row mb-5">
         <div class="col-12 text-center">
@@ -80,7 +98,7 @@
   </section>
 
   <!-- CONTACTO -->
-  <section class="py-5 bg-light">
+  <section id="contacto" class="py-5 bg-light">
     <div class="container">
       <div class="row mb-4">
         <div class="col-12 text-center">
@@ -133,40 +151,76 @@
   </section>
 
   <!-- OBRAS SOCIALES -->
-  <section class="obras-sociales py-5">
-    <div class="container text-center">
-      <h2 class="section-title">OBRAS SOCIALES</h2>
-      <div class="underline mx-auto mb-4"></div>
+  <!-- OBRAS SOCIALES -->
+<section class="obras-sociales py-5">
+  <div class="container text-center">
+    <h2 class="section-title">OBRAS SOCIALES</h2>
+    <div class="underline mx-auto mb-4"></div>
 
-      <div id="logosCarousel" class="carousel slide" data-bs-ride="carousel">
-        <div class="carousel-inner">
-          <div class="carousel-item active">
-            <div class="row justify-content-center align-items-center">
-              <div class="col-6 col-sm-4 col-md-3 mb-4">
-                <img src="assets/medicus.jpg" class="logo-img img-fluid" alt="Obra Social 1">
-              </div>
-              <div class="col-6 col-sm-4 col-md-3 mb-4">
-                <img src="assets/sancorsalud.jpg" class="logo-img img-fluid" alt="Obra Social 2">
-              </div>
-              <div class="col-6 col-sm-4 col-md-3 mb-4">
-                <img src="assets/smg.jpg" class="logo-img img-fluid" alt="Obra Social 3">
-              </div>
-              <div class="col-6 col-sm-4 col-md-3 mb-4">
-                <img src="assets/hominis.jpg" class="logo-img img-fluid" alt="Obra Social 4">
-              </div>
+    <div id="logosCarousel" class="carousel slide" data-bs-ride="carousel">
+      <div class="carousel-inner">
+
+        <!-- SLIDE 1 -->
+        <div class="carousel-item active">
+          <div class="row justify-content-center align-items-center">
+
+            <div class="col-12 col-sm-6 col-md-3 mb-4">
+              <img src="assets/medicus.jpg" class="logo-img img-fluid" alt="Obra Social 1">
             </div>
+
+            <div class="col-12 col-sm-6 col-md-3 mb-4">
+              <img src="assets/sancorsalud.jpg" class="logo-img img-fluid" alt="Obra Social 2">
+            </div>
+
+            <div class="col-12 col-sm-6 col-md-3 mb-4">
+              <img src="assets/smg.jpg" class="logo-img img-fluid" alt="Obra Social 3">
+            </div>
+
+            <div class="col-12 col-sm-6 col-md-3 mb-4">
+              <img src="assets/hominis.jpg" class="logo-img img-fluid" alt="Obra Social 4">
+            </div>
+
           </div>
         </div>
 
-        <button class="carousel-control-prev" type="button" data-bs-target="#logosCarousel" data-bs-slide="prev">
-          <span class="carousel-control-prev-icon custom-arrow" aria-hidden="true"></span>
-        </button>
-        <button class="carousel-control-next" type="button" data-bs-target="#logosCarousel" data-bs-slide="next">
-          <span class="carousel-control-next-icon custom-arrow" aria-hidden="true"></span>
-        </button>
+        <!-- SLIDE 2 -->
+        <div class="carousel-item">
+          <div class="row justify-content-center align-items-center">
+
+            <div class="col-12 col-sm-6 col-md-3 mb-4">
+              <img src="assets/galeno.jpg" class="logo-img img-fluid" alt="Obra Social 5">
+            </div>
+
+            <div class="col-12 col-sm-6 col-md-3 mb-4">
+              <img src="assets/medicals.jpg" class="logo-img img-fluid" alt="Obra Social 6">
+            </div>
+
+            <div class="col-12 col-sm-6 col-md-3 mb-4">
+              <img src="assets/medife.jpg" class="logo-img img-fluid" alt="Obra Social 7">
+            </div>
+
+            <div class="col-12 col-sm-6 col-md-3 mb-4">
+              <img src="assets/osde.jpg" class="logo-img img-fluid" alt="Obra Social 8">
+            </div>
+
+          </div>
+        </div>
+
       </div>
+
+      <!-- CONTROLES -->
+      <button class="carousel-control-prev" type="button" data-bs-target="#logosCarousel" data-bs-slide="prev">
+        <span class="carousel-control-prev-icon custom-arrow" aria-hidden="true"></span>
+      </button>
+
+      <button class="carousel-control-next" type="button" data-bs-target="#logosCarousel" data-bs-slide="next">
+        <span class="carousel-control-next-icon custom-arrow" aria-hidden="true"></span>
+      </button>
+
     </div>
-  </section>
+  </div>
+</section>
+
 
   <!-- FOOTER para visitante y paciente -->
   <app-footer></app-footer>
