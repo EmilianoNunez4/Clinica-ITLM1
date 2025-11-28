@@ -1,74 +1,215 @@
-<h2>Bienvenido {{ nombre }}</h2>
-<button (click)="cerrarSesion()">Cerrar Sesión</button>
+<div class="paciente-wrapper">
 
-<hr>
+  <!-- NAVBAR igual que en home -->
+  <app-navbar></app-navbar>
 
-<h3>Mi Perfil</h3>
-<div class="perfil">
-  <p><strong>Nombre:</strong> {{ nombre }}</p>
-  <p><strong>Apellido:</strong> {{ apellido }}</p>
-  <p><strong>DNI:</strong> {{ dni }}</p>
-  <p><strong>Email:</strong> {{ email }}</p>
+  <!-- HERO SUPERIOR -->
+  <section class="paciente-header d-flex align-items-center">
+    <div class="container">
+      <div class="row align-items-center g-4">
+        <div class="col-12 col-md-7">
+          <p class="paciente-hero-kicker mb-2">Panel del paciente</p>
+          <h1 class="paciente-hero-title mb-3">
+            Hola, <span>{{ nombre || 'Paciente' }}</span>
+          </h1>
+          <p class="paciente-hero-text mb-4">
+            Desde aquí podés ver tus turnos, revisar tu historial y solicitar nuevas consultas,
+            con el mismo estilo y confort que la página principal.
+          </p>
+
+          <div class="d-flex flex-wrap gap-2">
+            <a routerLink="/turnos/solicitar"
+               class="btn btn-primary rounded-pill px-4">
+              Solicitar turno
+            </a>
+            <button type="button"
+                    class="btn btn-outline-light rounded-pill px-4"
+                    (click)="cerrarSesion()">
+              Cerrar sesión
+            </button>
+          </div>
+        </div>
+
+        <!-- Resumen próximo turno en el hero -->
+        <div class="col-12 col-md-5">
+          <div class="card shadow-sm paciente-proximo-card"
+               *ngIf="turnosFuturos?.length; else sinProxHero">
+            <div class="card-body">
+              <h6 class="text-uppercase text-muted mb-2">Próximo turno</h6>
+              <h5 class="mb-1">
+                {{ turnosFuturos[0].especialidad }}
+              </h5>
+              <p class="mb-0 fw-semibold">
+                {{ turnosFuturos[0].fecha }} · {{ turnosFuturos[0].hora }} hs
+              </p>
+              <span class="badge mt-3 estado-pill estado-{{ turnosFuturos[0].estado }}">
+                {{ (turnosFuturos[0].estado || 'reservado') | titlecase }}
+              </span>
+            </div>
+          </div>
+
+          <ng-template #sinProxHero>
+            <div class="card shadow-sm paciente-proximo-card">
+              <div class="card-body">
+                <h6 class="text-uppercase text-muted mb-2">Próximo turno</h6>
+                <p class="mb-0">Aún no tenés turnos reservados.</p>
+              </div>
+            </div>
+          </ng-template>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CONTENIDO PRINCIPAL -->
+  <main class="py-4 py-md-5">
+    <div class="container">
+      <div class="row g-4">
+
+        <!-- COLUMNA PERFIL -->
+        <div class="col-12 col-lg-4">
+          <div class="card shadow-sm h-100 paciente-card">
+            <div class="card-body">
+              <h5 class="card-title mb-3">Mi perfil</h5>
+
+              <div class="item-perfil">
+                <span class="label">Nombre</span>
+                <span class="value">{{ nombre }} {{ apellido }}</span>
+              </div>
+              <div class="item-perfil">
+                <span class="label">Email</span>
+                <span class="value text-break">{{ email }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- COLUMNA TURNOS -->
+        <div class="col-12 col-lg-8">
+          <div class="card shadow-sm paciente-card mb-4">
+            <div class="card-body">
+              <h5 class="card-title mb-3">Mis turnos</h5>
+
+              <!-- Tabs Bootstrap -->
+              <ul class="nav nav-tabs paciente-tabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                  <button class="nav-link active"
+                          id="tab-proximos"
+                          data-bs-toggle="tab"
+                          data-bs-target="#pane-proximos"
+                          type="button"
+                          role="tab"
+                          aria-controls="pane-proximos"
+                          aria-selected="true">
+                    Próximos
+                  </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                  <button class="nav-link"
+                          id="tab-historial"
+                          data-bs-toggle="tab"
+                          data-bs-target="#pane-historial"
+                          type="button"
+                          role="tab"
+                          aria-controls="pane-historial"
+                          aria-selected="false">
+                    Historial
+                  </button>
+                </li>
+              </ul>
+
+              <div class="tab-content mt-3">
+
+                <!-- Próximos turnos -->
+                <div class="tab-pane fade show active"
+                     id="pane-proximos"
+                     role="tabpanel"
+                     aria-labelledby="tab-proximos">
+                  <div class="table-responsive">
+                    <table class="table align-middle mb-0">
+                      <thead class="table-light">
+                        <tr>
+                          <th>Fecha</th>
+                          <th>Hora</th>
+                          <th>Especialidad</th>
+                          <th>Estado</th>
+                          <th class="text-end">Acciones</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr *ngFor="let turno of turnosFuturos">
+                          <td><strong>{{ turno.fecha }}</strong></td>
+                          <td>{{ turno.hora }}</td>
+                          <td>{{ turno.especialidad }}</td>
+                          <td>
+                            <span class="estado-pill estado-{{ turno.estado }}">
+                              {{ (turno.estado || 'reservado') | titlecase }}
+                            </span>
+                          </td>
+                          <td class="text-end">
+                            <button
+                              *ngIf="turno.estado !== 'cancelado'"
+                              type="button"
+                              class="btn btn-sm btn-outline-danger rounded-pill"
+                              (click)="cancelarTurno(turno.id)">
+                              Cancelar
+                            </button>
+                          </td>
+                        </tr>
+                        <tr *ngIf="!turnosFuturos?.length">
+                          <td colspan="5" class="text-center text-muted py-3">
+                            No tenés turnos próximos.
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                <!-- Historial -->
+                <div class="tab-pane fade"
+                     id="pane-historial"
+                     role="tabpanel"
+                     aria-labelledby="tab-historial">
+                  <div class="table-responsive">
+                    <table class="table align-middle mb-0">
+                      <thead class="table-light">
+                        <tr>
+                          <th>Fecha</th>
+                          <th>Hora</th>
+                          <th>Especialidad</th>
+                          <th>Estado</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr *ngFor="let turno of turnosPasados">
+                          <td>{{ turno.fecha }}</td>
+                          <td>{{ turno.hora }}</td>
+                          <td>{{ turno.especialidad }}</td>
+                          <td>
+                            <span class="estado-pill estado-{{ turno.estado }}">
+                              {{ (turno.estado || 'atendido') | titlecase }}
+                            </span>
+                          </td>
+                        </tr>
+                        <tr *ngIf="!turnosPasados?.length">
+                          <td colspan="4" class="text-center text-muted py-3">
+                            Aún no hay historial de turnos.
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+  </main>
+  <app-footer></app-footer>
 </div>
-
-<hr>
-
-<h3>Solicitar Turno</h3>
-<div class="solicitud">
-  <label>Especialidad:</label>
-  <select [(ngModel)]="nuevaEspecialidad">
-    <option *ngFor="let esp of especialidades" [value]="esp">{{ esp }}</option>
-  </select>
-
-  <label>Fecha:</label>
-  <input type="date" [(ngModel)]="nuevaFecha">
-
-  <label>Hora:</label>
-  <input type="time" [(ngModel)]="nuevaHora">
-
-  <button (click)="solicitarTurno()">Solicitar</button>
-</div>
-
-<hr>
-
-<h3>Mis Turnos Próximos</h3>
-<table>
-  <tr>
-    <th>Fecha</th>
-    <th>Hora</th>
-    <th>Especialidad</th>
-    <th>Estado</th>
-    <th>Acciones</th>
-  </tr>
-
-  <tr *ngFor="let turno of turnosFuturos">
-    <td>{{ turno.fecha }}</td>
-    <td>{{ turno.hora }}</td>
-    <td>{{ turno.especialidad }}</td>
-    <td><span class="estado {{ turno.estado }}">{{ turno.estado }}</span></td>
-
-    <td>
-      <button (click)="cancelarTurno(turno.id)" *ngIf="turno.estado !== 'atendido'">Cancelar</button>
-    </td>
-  </tr>
-</table>
-
-<hr>
-
-<h3>Historial de Turnos</h3>
-<table>
-  <tr>
-    <th>Fecha</th>
-    <th>Hora</th>
-    <th>Especialidad</th>
-    <th>Estado</th>
-  </tr>
-
-  <tr *ngFor="let turno of turnosPasados">
-    <td>{{ turno.fecha }}</td>
-    <td>{{ turno.hora }}</td>
-    <td>{{ turno.especialidad }}</td>
-    <td><span class="estado {{ turno.estado }}">{{ turno.estado }}</span></td>
-  </tr>
-</table>
-

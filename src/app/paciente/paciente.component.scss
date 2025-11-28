@@ -1,151 +1,183 @@
+/* Colores base similares a home */
+$primary: #00509e;
+$primary-dark: #003b73;
+$accent: #429ed9;
+$bg-light: #f5f8fc;
 
-$verde-claro: #e8f5e9;
-$verde-medio: #a5d6a7;
-$verde-oscuro: #2e7d32;
-$verde-acento: #66bb6a;
-
-.estado {
-  padding: 6px 10px;
-  border-radius: 6px;
-  font-weight: 600;
-  display: inline-block;
-  text-transform: capitalize;
-  font-size: 0.9rem;
+.paciente-page {
+  background-color: $bg-light;
+  min-height: 100vh;
+  height: 100%;
 }
 
-.estado.pendiente {
-  background-color: #fffde7;
-  color: #f9a825;
-  border: 1px solid #fdd835;
-}
+/* HERO SUPERIOR */
+.paciente-header {
+  background: linear-gradient(
+    135deg,
+    rgba(3, 37, 71, 0.95),
+    rgba(0, 59, 115, 0.96)
+  );
+  color: #fff;
+  padding: 2.5rem 0;
 
-.estado.atendido {
-  background-color: #e8f5e9;
-  color: #2e7d32;
-  border: 1px solid #66bb6a;
-}
+  .header-tagline {
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.75);
+  }
 
-.estado.cancelado {
-  background-color: #ffebee;
-  color: #c62828;
-  border: 1px solid #ef5350;
-}
+  .header-title {
+    font-size: 2.1rem;
+    font-weight: 700;
 
-
-table {
-  width: 100%;
-  border-collapse: separate;
-  border-spacing: 0 8px;
-  margin: 1.5rem 0;
-
-  tr {
-    background: #ffffff;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
-    border-radius: 8px;
-
-    td:first-child,
-    th:first-child {
-      border-radius: 8px 0 0 8px;
-    }
-
-    td:last-child,
-    th:last-child {
-      border-radius: 0 8px 8px 0;
+    span {
+      color: #ffe58a;
     }
   }
 
-  th {
-    background-color: $verde-medio;
-    color: #fff;
-    padding: 10px;
-    text-align: center;
+  .header-text {
+    max-width: 420px;
     font-size: 0.95rem;
+    color: rgba(255, 255, 255, 0.9);
   }
 
-  td {
-    padding: 12px;
-    text-align: center;
-    font-size: 0.9rem;
-  }
-
-  button {
-    margin: 0 5px;
-  }
-}
-
-
-.perfil {
-  background: $verde-claro;
-  padding: 15px;
-  border-radius: 10px;
-  border-left: 4px solid $verde-oscuro;
-  max-width: 350px;
-  margin-bottom: 20px;
-
-  p {
-    margin: 4px 0;
-    font-size: 0.95rem;
-  }
-}
-
-.solicitud {
-  background: #ffffff;
-  border: 1px solid $verde-medio;
-  border-radius: 10px;
-  padding: 15px;
-  max-width: 350px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
-
-  label {
+  .btn-primary {
+    background-color: #ffcc00;
+    border-color: #ffcc00;
+    color: #003b73;
     font-weight: 600;
-    color: $verde-oscuro;
-  }
-
-  input, select {
-    padding: 8px;
-    border-radius: 6px;
-    border: 1px solid $verde-medio;
-    outline: none;
-    transition: 0.2s;
-
-    &:focus {
-      border-color: $verde-oscuro;
-      box-shadow: 0 0 4px rgba($verde-oscuro, 0.3);
-    }
-  }
-
-  button {
-    margin-top: 10px;
-    padding: 10px;
-    background: $verde-acento;
-    color: #fff;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    font-weight: 600;
-    transition: 0.2s;
 
     &:hover {
-      background: $verde-oscuro;
+      background-color: #ffc107;
+      border-color: #ffc107;
+      color: #002a4d;
+    }
+  }
+
+  .btn-outline-light {
+    border-width: 2px;
+    font-weight: 500;
+
+    &:hover {
+      background-color: #ffffff;
+      color: $primary-dark;
     }
   }
 }
 
-
-button {
-  padding: 8px 12px;
-  border-radius: 6px;
+/* Card del próximo turno en el hero */
+.card-proximo-turno {
+  border-radius: 1rem;
   border: none;
-  background: $verde-acento;
-  color: #fff;
-  cursor: pointer;
-  font-weight: 600;
-  transition: 0.2s;
 
-  &:hover {
-    background: $verde-oscuro;
+  h6 {
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+  }
+}
+
+/* CARDS GENERALES */
+.card-paciente {
+  border-radius: 1rem;
+  border: none;
+}
+
+/* Perfil */
+.item-perfil {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 0.75rem;
+
+  .label {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #888;
+  }
+
+  .value {
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: #333;
+  }
+}
+
+
+/* Pastillas de estado */
+.estado-pill {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+/* Estados concretos */
+.estado-reservado {
+  background-color: rgba(66, 158, 217, 0.12);
+  color: #00509e;
+}
+
+.estado-confirmado {
+  background-color: rgba(40, 167, 69, 0.12);
+  color: #198754;
+}
+
+.estado-atendido {
+  background-color: rgba(108, 117, 125, 0.12);
+  color: #6c757d;
+}
+
+.estado-cancelado {
+  background-color: rgba(220, 53, 69, 0.12);
+  color: #dc3545;
+}
+
+/* Tablas responsivas */
+.table {
+  font-size: 0.9rem;
+
+  thead th {
+    border-bottom-width: 1px;
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #777;
+  }
+}
+/* -----------------------
+   RESPONSIVE
+------------------------ */
+
+@media (max-width: 991.98px) {
+  .paciente-header {
+    text-align: center;
+
+    .header-text {
+      margin-inline: auto;
+    }
+
+    .d-flex.flex-wrap {
+      justify-content: center;
+    }
+
+    .card-proximo-turno {
+      margin-top: 1.5rem;
+    }
+  }
+}
+
+@media (max-width: 575.98px) {
+  .paciente-header {
+    padding: 2rem 0;
+
+    .header-title {
+      font-size: 1.7rem;
+    }
+  }
+
+  .table {
+    font-size: 0.82rem;
   }
 }

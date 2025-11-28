@@ -1,5 +1,5 @@
 import { Component, OnInit, inject } from '@angular/core';
-import { Firestore, collection, addDoc, query, where, doc, updateDoc, getDocs } from '@angular/fire/firestore';
+import { Firestore, collection, doc, updateDoc, getDocs } from '@angular/fire/firestore';
 import { Auth } from '@angular/fire/auth';
 import { getAuth, signOut } from 'firebase/auth';
 import { Router } from '@angular/router';
@@ -10,6 +10,7 @@ interface Turno {
   fecha: string;
   hora: string;
   especialidad: string;
+  paciente?: string;      // 👈 lo agregamos porque tu lógica usa este campo
   uidPaciente?: string;
   uidMedico?: string;
 }
@@ -25,111 +26,122 @@ export class PacienteComponent implements OnInit {
   private auth = inject(Auth);
 
   uid: string = '';
-  nombre = '';
-  apellido = '';
-  dni = '';
-  email = '';
+  nombre: string = '';
+  apellido: string = '';
+  dni: string = '';
+  email: string = '';
 
+  // Listas de turnos
   turnosFuturos: Turno[] = [];
   turnosPasados: Turno[] = [];
 
-  especialidades = ['Pediatría', 'Dermatología', 'Clínica'];
-
-  nuevaEspecialidad = '';
-  nuevaFecha = '';
-  nuevaHora = '';
+  // Formulario de nuevo turno
+  especialidades: string[] = ['Pediatría', 'Dermatología', 'Clínica'];
+  nuevaEspecialidad: string = '';
+  nuevaFecha: string = '';
+  nuevaHora: string = '';
 
   constructor(private router: Router) {}
 
-  async ngOnInit() {
-    const user = this.auth.currentUser;
+  async ngOnInit(): Promise<void> {
+    const user = await this.auth.currentUser;
 
-    if (user) {
-      this.uid = user.uid;
-      this.email = user.email || '';
-      await this.cargarPerfil();
-      await this.cargarTurnos();
+    if (!user) {
+      this.router.navigate(['/auth']);
+      return;
     }
+
+    this.uid = user.uid;
+    this.email = user.email ?? '';
+
+    await this.cargarPerfil();
+    await this.cargarTurnos();
   }
 
-  async cargarPerfil() {
+  // ================= PERFIL =================
+  async cargarPerfil(): Promise<void> {
     const usuariosRef = collection(this.firestore, 'usuarios');
-    const q = query(usuariosRef, where('uid', '==', this.uid));
-    const snapshot = await getDocs(q);
+    const snapshot = await getDocs(usuariosRef);
 
     snapshot.forEach((docSnap) => {
       const data: any = docSnap.data();
-      this.nombre = data.nombre;
-      this.apellido = data.apellido;
-      this.dni = data.dni;
+      if (data.uid === this.uid) {
+        this.nombre = data.nombre;
+        this.apellido = data.apellido;
+        this.dni = data.dni;
+      }
     });
   }
 
-  async cargarTurnos() {
+  // ================= TURNOS (MIS TURNOS) =================
+  async cargarTurnos(): Promise<void> {
     const turnosRef = collection(this.firestore, 'turnos');
-    const q = query(turnosRef, where('uidPaciente', '==', this.uid));
-    const snapshot = await getDocs(q);
+    const snapshot = await getDocs(turnosRef);
 
-    const lista: Turno[] = snapshot.docs.map(d => ({
+    const todos = snapshot.docs.map(d => ({
       id: d.id,
       ...d.data()
     })) as Turno[];
 
-    this.turnosFuturos = lista.filter(t => t.estado !== 'atendido' && t.estado !== 'cancelado');
-    this.turnosPasados = lista.filter(t => t.estado === 'atendido' || t.estado === 'cancelado');
+    // 👇 MIS turnos = misma lógica que tenías:
+    // this.misTurnos = this.turnos.filter((t) => t.paciente === this.usuario?.nombre);
+    const misTurnos = todos.filter(t => t.paciente === this.nombre);
+
+    this.turnosFuturos = misTurnos.filter(
+      t => t.estado !== 'atendido' && t.estado !== 'cancelado'
+    );
+    this.turnosPasados = misTurnos.filter(
+      t => t.estado === 'atendido' || t.estado === 'cancelado'
+    );
   }
 
-async solicitarTurno() {
-  if (!this.nuevaEspecialidad || !this.nuevaFecha || !this.nuevaHora) {
-    alert("Complete todos los campos.");
-    return;
-  }
+  // ================= RESERVAR NUEVO TURNO =================
+  async solicitarTurno(): Promise<void> {
+    if (!this.nuevaEspecialidad || !this.nuevaFecha || !this.nuevaHora) {
+      alert('Complete todos los campos.');
+      return;
+    }
 
-  const turnosRef = collection(this.firestore, 'turnos');
+    const turnosRef = collection(this.firestore, 'turnos');
+    const snapshot = await getDocs(turnosRef);
 
-  // 1️⃣ Buscamos un turno generado por el admin
-  const q = query(
-    turnosRef,
-    where('especialidad', '==', this.nuevaEspecialidad),
-    where('fecha', '==', this.nuevaFecha),
-    where('hora', '==', this.nuevaHora),
-    where('estado', '==', 'disponible')
-  );
+    // Buscamos un turno disponible que matchee especialidad/fecha/hora
+    const disponibles = snapshot.docs
+      .map(d => ({ id: d.id, ...d.data() as any }))
+      .filter(t =>
+        t.especialidad === this.nuevaEspecialidad &&
+        t.fecha === this.nuevaFecha &&
+        t.hora === this.nuevaHora &&
+        t.estado === 'disponible'
+      );
 
-  const snap = await getDocs(q);
+    if (!disponibles.length) {
+      alert('No hay un turno disponible en ese horario.');
+      return;
+    }
 
-  // No existe turno disponible → no se crea uno nuevo
-  if (snap.empty) {
-    alert("No hay un turno disponible en ese horario.");
-    return;
-  }
+    const turno = disponibles[0];
+    const turnoRef = doc(this.firestore, 'turnos', turno.id);
 
-  // 2️⃣ Tomamos el primer turno encontrado
-  const turnoDoc = snap.docs[0];
-  const turnoRef = doc(this.firestore, 'turnos', turnoDoc.id);
+    await updateDoc(turnoRef, {
+      estado: 'reservado',
+      paciente: this.nombre,         // 👈 igual que en tu lógica original
+      uidPaciente: this.uid ?? null  // opcional, por si después querés filtrar por uid
+    });
 
-  // 3️⃣ Lo reservamos asignando el paciente
-  await updateDoc(turnoRef, {
-    uidPaciente: this.uid,
-    nombrePaciente: this.nombre,
-    estado: 'reservado'
-  });
-
-  alert("Turno reservado con éxito.");
-
-  // 4️⃣ Recargar turnos del paciente
-  await this.cargarTurnos();
-}
-
-
-
-  async cancelarTurno(id: string) {
-    const turnoRef = doc(this.firestore, 'turnos', id);
-    await updateDoc(turnoRef, { estado: 'cancelado' });
+    alert('Turno reservado con éxito.');
     await this.cargarTurnos();
   }
 
-  cerrarSesion() {
+  // ================= CANCELAR TURNO =================
+  async cancelarTurno(id: string): Promise<void> {
+    const turnoRef = doc(this.firestore, 'turnos', id);
+    await updateDoc(turnoRef, { estado: 'disponible', paciente: null });
+    await this.cargarTurnos();
+  }
+
+  // ================= CERRAR SESIÓN =================
+  cerrarSesion(): void {
     const auth = getAuth();
     signOut(auth).then(() => {
       localStorage.removeItem('usuarioActual');

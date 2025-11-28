@@ -1,53 +1,152 @@
-<div class="solicitar-container">
-  <h1>Solicitar Turno</h1>
+<div class="solicitar-wrapper">
 
-  <!-- 🔹 Filtro por especialidad -->
-  <section>
-    <label for="filtro">Filtrar por especialidad:</label>
-    <select id="filtro" (change)="filtrarPorEspecialidad($event)">
-      <option value="todos">Todas</option>
-      <option *ngFor="let esp of especialidades" [value]="esp">{{ esp }}</option>
-    </select>
-  </section>
+  <!-- NAVBAR igual que en paciente (si ya la usás en otras páginas) -->
+  <app-navbar></app-navbar>
 
-  <hr />
+  <!-- HERO SUPERIOR -->
+  <section class="solicitar-hero d-flex align-items-center">
+    <div class="container">
+      <div class="row align-items-center g-4">
+        <div class="col-12 col-md-7">
+          <p class="solicitar-hero-kicker mb-2">Gestión de turnos</p>
+          <h1 class="solicitar-hero-title mb-3">
+            Solicitar turno
+          </h1>
+          <p class="solicitar-hero-text mb-4">
+            Elegí la especialidad que necesitás y reservá un turno disponible en pocos clics.
+          </p>
+        </div>
 
-  <!-- 🔹 Turnos disponibles -->
-  <section>
-    <h2>Turnos disponibles</h2>
-    <div *ngIf="filtrados.length; else sinTurnos">
-      <div class="turno" *ngFor="let t of filtrados; let i = index">
-        <p><strong>{{ t.fecha }}</strong> - {{ t.hora }}</p>
-        <p>{{ t.especialidad }}</p>
-        <p *ngIf="t.estado === 'disponible'" class="estado disponible">🟢 Disponible</p>
-        <button (click)="reservarTurno(i)">✅ Reservar</button>
+        <div class="col-12 col-md-5">
+          <div class="card shadow-sm solicitar-info-card">
+          </div>
+        </div>
+
       </div>
     </div>
-    <ng-template #sinTurnos>
-      <p>No hay turnos disponibles por el momento.</p>
-    </ng-template>
   </section>
 
-  <hr />
+  <!-- CONTENIDO PRINCIPAL -->
+  <main class="py-4 py-md-5">
+    <div class="container">
+      <div class="row justify-content-center g-4">
 
-  <!-- 🔹 Mis turnos reservados -->
-  <section id="Turnos">
-    <h2>Mis turnos reservados</h2>
-    <div *ngIf="misTurnos.length; else sinReservas">
-      <div class="turno" *ngFor="let t of misTurnos; let i = index">
-        <p><strong>{{ t.fecha }}</strong> - {{ t.hora }}</p>
-        <p>{{ t.especialidad }}</p>
-        <p class="estado reservado">🔵 Reservado</p>
-        <button (click)="cancelarTurno(i)">❌ Cancelar</button>
+        <!-- FILTRO POR ESPECIALIDAD -->
+        <div class="col-12 col-lg-10">
+          <div class="card shadow-sm solicitar-card">
+            <div class="card-body">
+              <h5 class="card-title mb-3">Filtrar por especialidad</h5>
+
+              <div class="row g-3 align-items-center">
+                <div class="col-12 col-md-6 col-lg-4">
+                  <label for="filtro" class="form-label mb-1">
+                    Especialidad
+                  </label>
+                  <select id="filtro"
+                          class="form-select"
+                          (change)="filtrarPorEspecialidad($event)">
+                    <option value="todos">Todas</option>
+                    <option *ngFor="let esp of especialidades" [value]="esp">{{ esp }}</option>
+                  </select>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+        <!-- TURNOS DISPONIBLES -->
+        <div class="col-12 col-lg-10">
+          <div class="card shadow-sm solicitar-card">
+            <div class="card-body">
+              <h5 class="card-title mb-3">Turnos disponibles</h5>
+
+              <ng-container *ngIf="filtrados.length; else sinTurnos">
+                <div class="lista-turnos">
+                  <div class="turno-item"
+                       *ngFor="let t of filtrados | slice:(currentPage - 1) * pageSize : currentPage * pageSize; let i = index">
+                    <div class="turno-main">
+                      <div class="turno-info">
+                        <div class="turno-fecha-hora">
+                          <span class="turno-fecha">{{ t.fecha }}</span>
+                          <span class="mx-1">·</span>
+                          <span class="turno-hora">{{ t.hora }} hs</span>
+                        </div>
+                        <div class="turno-especialidad">
+                          {{ t.especialidad }}
+                        </div>
+                        <div *ngIf="t.estado === 'disponible'" class="mt-1">
+                          <span class="estado-pill estado-disponible">
+                            Disponible
+                          </span>
+                        </div>
+                      </div>
+
+                      <div class="turno-acciones">
+                        <button type="button"
+                                class="btn btn-sm btn-primary rounded-pill px-3"
+                                (click)="reservarTurno(((currentPage - 1) * pageSize) + i)">
+                          Reservar turno
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- PAGINACIÓN -->
+                <div class="solicitar-paginacion mt-3" *ngIf="totalPages > 1">
+                  <button
+                    type="button"
+                    class="btn btn-sm btn-outline-secondary me-2"
+                    (click)="irAPagina(currentPage - 1)"
+                    [disabled]="currentPage === 1">
+                    ⬅️ Anterior
+                  </button>
+
+                  <button
+                    type="button"
+                    class="btn btn-sm"
+                    *ngFor="let p of paginas"
+                    [ngClass]="{
+                      'btn-primary': p === currentPage,
+                      'btn-outline-primary': p !== currentPage
+                    }"
+                    (click)="irAPagina(p)">
+                    {{ p }}
+                  </button>
+
+                  <button
+                    type="button"
+                    class="btn btn-sm btn-outline-secondary ms-2"
+                    (click)="irAPagina(currentPage + 1)"
+                    [disabled]="currentPage === totalPages">
+                    Siguiente ➡️
+                  </button>
+                </div>
+              </ng-container>
+
+              <ng-template #sinTurnos>
+                <p class="text-muted mb-0 text-center py-3">
+                  No hay turnos disponibles por el momento.
+                </p>
+              </ng-template>
+
+            </div>
+          </div>
+        </div>
+
+        <!-- BOTÓN VOLVER -->
+        <div class="col-12 col-lg-10 text-end">
+          <button type="button"
+                  class="btn btn-outline-secondary rounded-pill px-4"
+                  (click)="volver()">
+            ⬅️ Volver al inicio
+          </button>
+        </div>
+
       </div>
     </div>
-    <ng-template #sinReservas>
-      <p>No tenés turnos reservados.</p>
-    </ng-template>
-  </section>
+  </main>
 
-  <hr />
-
-  <button (click)="volver()">⬅️ Volver al inicio</button>
+  <app-footer></app-footer>
 </div>
-

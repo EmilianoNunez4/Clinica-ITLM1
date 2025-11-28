@@ -1,6 +1,14 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { getFirestore, collection, getDocs, doc, updateDoc, query, where } from 'firebase/firestore';
+import {
+  getFirestore,
+  collection,
+  getDocs,
+  doc,
+  updateDoc,
+  query,
+  where
+} from 'firebase/firestore';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 
 @Component({
@@ -13,7 +21,21 @@ export class SolicitarComponent implements OnInit {
   turnos: any[] = [];
   filtrados: any[] = [];
   especialidades: string[] = [];
-  misTurnos: any[] = []; 
+  misTurnos: any[] = [];
+
+  // 🔹 Paginación de turnos disponibles
+  pageSize: number = 20;       // cantidad de turnos por página
+  currentPage: number = 1;     // página actual
+
+  get totalPages(): number {
+    return this.filtrados.length
+      ? Math.ceil(this.filtrados.length / this.pageSize)
+      : 1;
+  }
+
+  get paginas(): number[] {
+    return Array.from({ length: this.totalPages }, (_, i) => i + 1);
+  }
 
   constructor(private router: Router) {}
 
@@ -32,22 +54,35 @@ export class SolicitarComponent implements OnInit {
       const allUsers = usuariosSnap.docs.map((d) => d.data());
       this.usuario = allUsers.find((u) => u['email'] === user.email);
 
-      // cargar turnos
+      // Cargar turnos
       const turnosSnap = await getDocs(collection(db, 'turnos'));
       this.turnos = turnosSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
 
       // Filtrar solo disponibles
       this.filtrados = this.turnos.filter((t) => t.estado === 'disponible');
 
-      // turnos reservados por paciente(individual desde la fierbase)
-      this.misTurnos = this.turnos.filter((t) => t.paciente === this.usuario?.nombre);
+      // Turnos reservados por este paciente
+      this.misTurnos = this.turnos.filter(
+        (t) => t.paciente === this.usuario?.nombre
+      );
 
       // Especialidades únicas
-      this.especialidades = Array.from(new Set(this.turnos.map((t) => t.especialidad)));
+      this.especialidades = Array.from(
+        new Set(this.turnos.map((t) => t.especialidad))
+      );
+
+      // 👇 Arrancamos siempre en la primera página
+      this.currentPage = 1;
     });
   }
 
-    // Filtrar por especialidad
+  // 🔹 Ir a una página específica
+  irAPagina(p: number) {
+    if (p < 1 || p > this.totalPages) return;
+    this.currentPage = p;
+  }
+
+  // 🔹 Filtrar por especialidad
   filtrarPorEspecialidad(event: Event) {
     const select = event.target as HTMLSelectElement | null;
     const valor = select?.value || 'todos';
@@ -59,48 +94,85 @@ export class SolicitarComponent implements OnInit {
         (t) => t.especialidad === valor && t.estado === 'disponible'
       );
     }
+
+    // 👇 Cada vez que filtrás, volvés a la página 1
+    this.currentPage = 1;
   }
 
-  // Reservar turno
+  // 🔹 Reservar turno
   async reservarTurno(index: number) {
     const db = getFirestore();
     const turno = this.filtrados[index];
 
-    if (!confirm(`¿Confirmar turno de ${turno.fecha} a las ${turno.hora} (${turno.especialidad})?`))
+    if (
+      !confirm(
+        `¿Confirmar turno de ${turno.fecha} a las ${turno.hora} (${turno.especialidad})?`
+      )
+    )
       return;
 
     try {
       const turnoRef = doc(db, 'turnos', turno.id);
-      // Si el turno no tiene uidMedico asignado (datos históricos o generación defectuosa),
-      // asignamos uno ahora basándonos en la especialidad y una rotación simple.
+
+      // Si el turno no tiene uidMedico asignado, lo resolvemos
       let uidMedicoToAssign = turno.uidMedico || null;
       if (!uidMedicoToAssign) {
-        // obtener todos los médicos y filtrar por especialidad (case/diacritics-insensitive)
-        const medicosSnap = await getDocs(query(collection(db, 'usuarios'), where('rol', '==', 'medico')));
-        const medicosAll = medicosSnap.docs.map(d => ({ uid: d.id, ...(d.data() as any) }));
-        const normalize = (s: string) => s?.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase().trim();
-        const medicos = medicosAll.filter(m => normalize(m.especialidad || '') === normalize(turno.especialidad || ''));
+        const medicosSnap = await getDocs(
+          query(collection(db, 'usuarios'), where('rol', '==', 'medico'))
+        );
+        const medicosAll = medicosSnap.docs.map((d) => ({
+          uid: d.id,
+          ...(d.data() as any)
+        }));
+
+        const normalize = (s: string) =>
+          s
+            ?.normalize('NFD')
+            .replace(/\p{Diacritic}/gu, '')
+            .toLowerCase()
+            .trim();
+
+        const medicos = medicosAll.filter(
+          (m) => normalize(m.especialidad || '') === normalize(turno.especialidad || '')
+        );
 
         if (medicos.length > 0) {
-          const horarios = ["09:00", "10:30", "12:00", "13:30", "15:00", "16:30"];
-          const dayIndex = Math.floor(new Date(turno.fecha).getTime() / 86400000);
+          const horarios = ['09:00', '10:30', '12:00', '13:30', '15:00', '16:30'];
+          const dayIndex = Math.floor(
+            new Date(turno.fecha).getTime() / 86400000
+          );
           const slotIndex = Math.max(0, horarios.indexOf(turno.hora));
           const chosen = medicos[(dayIndex + slotIndex) % medicos.length];
           uidMedicoToAssign = chosen.uid;
         }
       }
 
-      const updatePayload: any = { estado: 'reservado', paciente: this.usuario.nombre };
+      const updatePayload: any = {
+        estado: 'reservado',
+        paciente: this.usuario.nombre
+      };
       if (uidMedicoToAssign) updatePayload.uidMedico = uidMedicoToAssign;
 
       await updateDoc(turnoRef, updatePayload);
 
-      // Actualizar local
+      // Actualizar local (MISMA LÓGICA)
       this.turnos = this.turnos.map((t) =>
-        t.id === turno.id ? { ...t, estado: 'reservado', paciente: this.usuario.nombre, uidMedico: uidMedicoToAssign || t.uidMedico } : t
+        t.id === turno.id
+          ? {
+              ...t,
+              estado: 'reservado',
+              paciente: this.usuario.nombre,
+              uidMedico: uidMedicoToAssign || t.uidMedico
+            }
+          : t
       );
       this.filtrados = this.turnos.filter((t) => t.estado === 'disponible');
-      this.misTurnos = this.turnos.filter((t) => t.paciente === this.usuario.nombre);
+      this.misTurnos = this.turnos.filter(
+        (t) => t.paciente === this.usuario.nombre
+      );
+
+      // Ajustar página actual (por si quedó fuera de rango)
+      this.currentPage = Math.min(this.currentPage, this.totalPages);
 
       alert('✅ Turno reservado correctamente');
     } catch (error: any) {
@@ -109,7 +181,7 @@ export class SolicitarComponent implements OnInit {
     }
   }
 
-  // Cancelar turno
+  // 🔹 Cancelar turno
   async cancelarTurno(index: number) {
     const db = getFirestore();
     const t = this.misTurnos[index];
@@ -120,12 +192,15 @@ export class SolicitarComponent implements OnInit {
       const turnoRef = doc(db, 'turnos', t.id);
       await updateDoc(turnoRef, { estado: 'disponible', paciente: null });
 
-      // Actualizar local
+      // Actualizar local (MISMA LÓGICA)
       this.misTurnos.splice(index, 1);
       this.turnos = this.turnos.map((x) =>
         x.id === t.id ? { ...x, estado: 'disponible', paciente: null } : x
       );
       this.filtrados = this.turnos.filter((x) => x.estado === 'disponible');
+
+      // Ajustar página
+      this.currentPage = Math.min(this.currentPage, this.totalPages);
 
       alert('🟢 Turno cancelado correctamente');
     } catch (error: any) {
