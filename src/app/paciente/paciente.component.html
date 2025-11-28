@@ -29,17 +29,17 @@
         <!-- Resumen próximo turno en el hero -->
         <div class="col-12 col-md-5">
           <div class="card shadow-sm paciente-proximo-card"
-               *ngIf="turnosFuturos?.length; else sinProxHero">
+              *ngIf="turnosFuturos?.length; else sinProxHero">
             <div class="card-body">
               <h6 class="text-uppercase text-muted mb-2">Próximo turno</h6>
               <h5 class="mb-1">
-                {{ turnosFuturos[0].especialidad }}
+                {{ turnosFuturos?.[0]?.especialidad }}
               </h5>
               <p class="mb-0 fw-semibold">
-                {{ turnosFuturos[0].fecha }} · {{ turnosFuturos[0].hora }} hs
+                {{ turnosFuturos?.[0]?.fecha }} · {{ turnosFuturos?.[0]?.hora }} hs
               </p>
-              <span class="badge mt-3 estado-pill estado-{{ turnosFuturos[0].estado }}">
-                {{ (turnosFuturos[0].estado || 'reservado') | titlecase }}
+              <span class="badge mt-3 estado-pill estado-{{ turnosFuturos?.[0]?.estado }}">
+                {{ (turnosFuturos?.[0]?.estado || 'reservado') | titlecase }}
               </span>
             </div>
           </div>
@@ -53,6 +53,7 @@
             </div>
           </ng-template>
         </div>
+
       </div>
     </div>
   </section>

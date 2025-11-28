@@ -10,7 +10,7 @@ interface Turno {
   fecha: string;
   hora: string;
   especialidad: string;
-  paciente?: string;      // 👈 lo agregamos porque tu lógica usa este campo
+  paciente?: string;      
   uidPaciente?: string;
   uidMedico?: string;
 }
@@ -32,8 +32,9 @@ export class PacienteComponent implements OnInit {
   email: string = '';
 
   // Listas de turnos
-  turnosFuturos: Turno[] = [];
-  turnosPasados: Turno[] = [];
+turnosFuturos: any[] | null = null;
+turnosPasados: any[] | null = null;
+
 
   // Formulario de nuevo turno
   especialidades: string[] = ['Pediatría', 'Dermatología', 'Clínica'];
@@ -139,7 +140,6 @@ export class PacienteComponent implements OnInit {
     await updateDoc(turnoRef, { estado: 'disponible', paciente: null });
     await this.cargarTurnos();
   }
-
   // ================= CERRAR SESIÓN =================
   cerrarSesion(): void {
     const auth = getAuth();

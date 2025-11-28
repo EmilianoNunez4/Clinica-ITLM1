@@ -44,6 +44,7 @@ export class HomeComponent implements OnInit {
   cerrandoSesion: boolean = false;
   cargando: boolean = true;
   logoutEnProgreso: boolean = false;
+  cargandoTurnos: boolean = false;
 
   constructor(private firestore: Firestore, private router: Router) {}
   
@@ -376,83 +377,148 @@ async reactivarUsuario(index: number) {
 
   // ===========================
   // GENERAR TURNOS (ARREGLADO)
-  // ===========================
-  async generarTurnos() {
+async generarTurnos() {
 
-    // SOLO 6 TURNOS POR DÍA
+  Swal.fire({
+    title: "Generando turnos...",
+    text: "Esto puede tardar unos segundos",
+    allowOutsideClick: false,
+    allowEscapeKey: false,
+    allowEnterKey: false,
+    didOpen: () => {
+      Swal.showLoading();
+    }
+  });
+
+  this.cargandoTurnos = true;
+
+  try {
     const horarios = ['09:00', '10:30', '12:00', '13:30', '15:00', '16:30'];
     const diasAGenerar = 14;
 
     const db = getFirestore();
 
+    // Traer médicos
     const medicosSnap = await getDocs(
       query(collection(db, 'usuarios'), where('rol', '==', 'medico'))
     );
 
-    const medicos = medicosSnap.docs.map(doc => ({
-      uid: doc.id,
-      ...(doc.data() as any)
-    }));
+    const medicos = medicosSnap.docs.map(d => ({ uid: d.id, ...(d.data() as any) }));
 
     const especialidades = Array.from(
-      new Set(medicos.map(m => m.especialidad).filter(e => e))
+      new Set(medicos.map(m => m.especialidad).filter((e: any) => e))
     );
 
     if (especialidades.length === 0) {
+      Swal.close();
       Swal.fire('Advertencia', 'No hay médicos con especialidades asignadas.', 'warning');
       return;
     }
 
-    for (const especialidad of especialidades) {
+    // Traemos todos los turnos existentes
+    const allTurnosSnap = await getDocs(collection(db, 'turnos'));
+    const existingKeys = new Set<string>();
 
-      const medicosEsp = medicos.filter(m => m.especialidad === especialidad);
-      if (medicosEsp.length === 0) continue;
+    let ultimaFecha: string | null = null;
 
-      let fechasGeneradas = 0;
-      let diasPasados = 0;
-      let offset = 0; // rotación de médicos
+    allTurnosSnap.docs.forEach(d => {
+      const data: any = d.data();
+      const key = `${data.fecha}|${data.hora}|${data.especialidad}`;
+      existingKeys.add(key);
 
-      const hoy = new Date();
+      if (!ultimaFecha || data.fecha > ultimaFecha) {
+        ultimaFecha = data.fecha; // string YYYY-MM-DD
+      }
+    });
 
-      while (fechasGeneradas < diasAGenerar) {
+    // 📌 Determinar fecha inicial de generación
+    let fechaInicio: Date;
 
-        const fecha = new Date(hoy);
-        fecha.setDate(hoy.getDate() + diasPasados);
+    if (!ultimaFecha) {
+      // Si no hay turnos ⇒ arrancamos desde mañana
+      fechaInicio = new Date();
+      fechaInicio.setDate(fechaInicio.getDate() + 1);
+    } else {
+      // Si hay turnos ⇒ tomamos la próxima fecha hábil después de la última
+      fechaInicio = new Date(ultimaFecha);
+      fechaInicio.setDate(fechaInicio.getDate() + 1);
+    }
 
-        const diaSemana = fecha.getDay();
-        if (diaSemana !== 0 && diaSemana !== 6) {
-          const fechaStr = fecha.toISOString().split("T")[0];
+    // Saltar fines de semana
+    while (fechaInicio.getDay() === 0 || fechaInicio.getDay() === 6) {
+      fechaInicio.setDate(fechaInicio.getDate() + 1);
+    }
 
-          // CREA SOLO 6 TURNOS (uno por cada horario)
+    let diasGenerados = 0;
+    let offsetMedico = 0;
+
+    // 🔥 Generar exactamente 14 días hábiles posteriores al último turno
+    while (diasGenerados < diasAGenerar) {
+
+      const fecha = new Date(fechaInicio);
+
+      const fechaStr = fecha.toISOString().split('T')[0];
+      const diaSemana = fecha.getDay();
+
+      if (diaSemana !== 0 && diaSemana !== 6) {
+
+        // Especialidad del día rotada
+        const especialidad = especialidades[diasGenerados % especialidades.length];
+        const medicosEsp = medicos.filter(m => m.especialidad === especialidad);
+
+        if (medicosEsp.length) {
           for (let i = 0; i < horarios.length; i++) {
+            const hora = horarios[i];
+            const key = `${fechaStr}|${hora}|${especialidad}`;
 
-            const medico = medicosEsp[(offset + i) % medicosEsp.length];
+            if (existingKeys.has(key)) continue;
+
+            const medico = medicosEsp[(offsetMedico + i) % medicosEsp.length];
 
             const turno: Turno = {
               fecha: fechaStr,
-              hora: horarios[i],
+              hora,
               especialidad,
               estado: 'disponible',
               uidMedico: medico.uid
             };
 
             await addDoc(collection(db, 'turnos'), turno);
+            existingKeys.add(key);
           }
-
-          fechasGeneradas++;
-          offset++;
         }
 
-        diasPasados++;
+        diasGenerados++;
+        offsetMedico++;
+      }
+
+      // siguiente día
+      fechaInicio.setDate(fechaInicio.getDate() + 1);
+
+      // saltar fin de semana
+      while (fechaInicio.getDay() === 0 || fechaInicio.getDay() === 6) {
+        fechaInicio.setDate(fechaInicio.getDate() + 1);
       }
     }
 
+    // Actualizar lista
     const turnosSnap2 = await getDocs(collection(db, 'turnos'));
     this.turnos = turnosSnap2.docs.map(d => ({ id: d.id, ...d.data() })) as Turno[];
     this.turnosFiltrados = [...this.turnos];
 
+    Swal.close();
     Swal.fire('Éxito', 'Turnos generados correctamente.', 'success');
+
+  } catch (error) {
+    console.error(error);
+    Swal.close();
+    Swal.fire("Error", "Hubo un problema generando los turnos.", "error");
+
+  } finally {
+    this.cargandoTurnos = false;
   }
+}
+
 
   // ===========================
   // FILTROS
