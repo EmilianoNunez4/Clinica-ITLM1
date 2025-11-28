@@ -31,7 +31,7 @@ export class MedicoComponent implements OnInit {
   uid: string = '';
   nombre: string = '';
   verHistorial = false;
-  usuarioActual: any = null; // ✅ agregamos esto para evitar error en HTML
+  usuarioActual: any = null;
   removingTurnos: Set<string> = new Set();
   processingTurnos: Set<string> = new Set();
 
@@ -41,15 +41,13 @@ export class MedicoComponent implements OnInit {
     const user = this.auth.currentUser;
       const authInstance = getAuth();
 
-      // Cuando cambia el estado de autenticación (login/logout), cargamos perfil y turnos
       onAuthStateChanged(authInstance, async (user: User | null) => {
         if (user) {
           this.uid = user.uid;
-          this.usuarioActual = user; // almacenamos el usuario para mostrar en la vista
+          this.usuarioActual = user; 
           await this.cargarPerfil();
           await this.cargarTurnos();
         } else {
-          // usuario no logueado: limpiar datos locales
           this.uid = '';
           this.usuarioActual = null;
           this.turnosActivos = [];
@@ -69,14 +67,12 @@ export class MedicoComponent implements OnInit {
 
   async cargarTurnos() {
     const turnosRef = collection(this.firestore, 'turnos');
-    // Query: turnos asignados a este médico
     const q = query(turnosRef, where('uidMedico', '==', this.uid));
     const snapshot = await getDocs(q);
 
     console.log('📌 cargarTurnos: UID del médico logueado:', this.uid);
     console.log('📌 cargarTurnos: documentos obtenidos por query uidMedico=', this.uid, ' -> ', snapshot.size);
     
-    // Logs adicionales: obtener TODOS los turnos sin filtro para ver estructura
     const allTurnosSnap = await getDocs(collection(this.firestore, 'turnos'));
     console.log('📄 TODOS los turnos en la BD (hasta 10):', allTurnosSnap.docs.slice(0, 10).map(d => ({
       id: d.id,
@@ -94,7 +90,6 @@ export class MedicoComponent implements OnInit {
       const data: any = docSnap.data();
       const fecha = data.fecha instanceof Timestamp ? data.fecha.toDate().toISOString().split('T')[0] : data.fecha;
 
-      // Normalizar nombre de paciente: el código en otros componentes usa 'paciente'
       const nombrePaciente = data.nombrePaciente ?? data.paciente ?? null;
       const uidPaciente = data.uidPaciente ?? data.uidPaciente ?? data.uidPaciente ?? null;
 
@@ -109,21 +104,15 @@ export class MedicoComponent implements OnInit {
       return mapped as Turno;
     }) as Turno[];
 
-    // Log de ejemplo para debugging (hasta 6 docs)
     console.log('📄 ejemplo turnos (hasta 6):', snapshot.docs.slice(0, 6).map(d => ({ id: d.id, ...d.data() })));
-
-    // Ordenar cronológicamente: por fecha asc, luego hora asc
     todosLosTurnos.sort((a, b) => {
       const fechaCmp = a.fecha.localeCompare(b.fecha);
       return fechaCmp !== 0 ? fechaCmp : a.hora.localeCompare(b.hora);
     });
 
-    // Mostrar los turnos activos para este médico: todos los que NO estén marcados como 'atendido'
-    // (incluye 'disponible' y 'reservado' para que el médico vea los turnos que reservaron pacientes)
     this.turnosActivos = todosLosTurnos.filter(t => t.estado !== 'atendido');
     this.turnosAtendidos = todosLosTurnos.filter(t => t.estado === 'atendido');
 
-    // Logs para debugging rápido
     console.log('🔎 turnos totales encontrados:', todosLosTurnos.length);
     console.log('🔹 turnos activos (no atendidos):', this.turnosActivos.length);
     console.log('🔸 turnos atendidos:', this.turnosAtendidos.length);
@@ -138,23 +127,17 @@ export class MedicoComponent implements OnInit {
     await this.cargarTurnos();
   }
 
-  // Animación visual: marcar como atendido con efecto, quitar de la lista activa y mover a atendidos
   async marcarAtendido(turno: Turno) {
     if (!turno?.id) return;
     const id = turno.id;
-    // marcar localmente para animación
     this.removingTurnos.add(id);
-
-    // Marcar como processing para deshabilitar el botón y mostrar spinner
     this.processingTurnos.add(id);
 
-    // Esperar la animación (350ms)
     setTimeout(async () => {
       try {
         const turnoRef = doc(this.firestore, 'turnos', id);
         await updateDoc(turnoRef, { estado: 'atendido' });
 
-        // actualizar arrays locales
         this.turnosActivos = this.turnosActivos.filter(t => t.id !== id);
         const atendido = { ...turno, estado: 'atendido' } as Turno;
         this.turnosAtendidos = [atendido, ...this.turnosAtendidos].sort((a, b) => {
@@ -164,7 +147,6 @@ export class MedicoComponent implements OnInit {
       } catch (err) {
         console.error('Error marcando turno como atendido', err);
       } finally {
-        // Limpiar estado de animación y processing
         this.removingTurnos.delete(id);
         this.processingTurnos.delete(id);
       }

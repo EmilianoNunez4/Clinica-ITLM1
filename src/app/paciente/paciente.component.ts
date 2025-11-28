@@ -84,8 +84,6 @@ turnosPasados: any[] | null = null;
       ...d.data()
     })) as Turno[];
 
-    // 👇 MIS turnos = misma lógica que tenías:
-    // this.misTurnos = this.turnos.filter((t) => t.paciente === this.usuario?.nombre);
     const misTurnos = todos.filter(t => t.paciente === this.nombre);
 
     this.turnosFuturos = misTurnos.filter(
@@ -106,7 +104,6 @@ turnosPasados: any[] | null = null;
     const turnosRef = collection(this.firestore, 'turnos');
     const snapshot = await getDocs(turnosRef);
 
-    // Buscamos un turno disponible que matchee especialidad/fecha/hora
     const disponibles = snapshot.docs
       .map(d => ({ id: d.id, ...d.data() as any }))
       .filter(t =>
@@ -126,8 +123,8 @@ turnosPasados: any[] | null = null;
 
     await updateDoc(turnoRef, {
       estado: 'reservado',
-      paciente: this.nombre,         // 👈 igual que en tu lógica original
-      uidPaciente: this.uid ?? null  // opcional, por si después querés filtrar por uid
+      paciente: this.nombre,        
+      uidPaciente: this.uid ?? null 
     });
 
     alert('Turno reservado con éxito.');

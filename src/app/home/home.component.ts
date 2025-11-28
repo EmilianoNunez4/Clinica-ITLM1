@@ -53,7 +53,6 @@ async ngOnInit() {
 
     onAuthStateChanged(auth, async (user) => {
 
-      // 🔥 EVITAR QUE VUELVA AL HOME TRAS LOGOUT
       if (this.logoutEnProgreso) return;
 
       if (!user) {
@@ -121,12 +120,10 @@ limpiarFiltroUsuarios() {
   this.usuariosFiltrados = [...this.usuarios];
 }
 
-  // ===========================
   // LOGOUT
-  // ===========================
   logout() {
-    this.logoutEnProgreso = true;   // ⭐ evita rebote al home
-    this.cerrandoSesion = true;     // muestra spinner
+    this.logoutEnProgreso = true;   
+    this.cerrandoSesion = true;    
 
     const auth = getAuth();
 
@@ -140,9 +137,7 @@ limpiarFiltroUsuarios() {
   }
 
 
-  // ===========================
   // EDITAR CAMPO TURNO
-  // ===========================
   async editarCampo(index: number, campo: keyof Turno) {
     const db = getFirestore();
     const turno = this.turnos[index];
@@ -185,9 +180,7 @@ limpiarFiltroUsuarios() {
     }
   }
 
-  // ===========================
   // CAMBIAR ROL USUARIO
-  // ===========================
   async cambiarRol(index: number) {
     const order = ['paciente', 'medico', 'admin'];
     const u = this.usuarios[index];
@@ -236,9 +229,7 @@ limpiarFiltroUsuarios() {
     }
   }
 
-// ===========================
 // ASIGNAR ESPECIALIDAD A MÉDICO
-// ===========================
   async asignarEspecialidad(index: number) {
     const u = this.usuarios[index];
     if (!u || u.rol !== 'medico') return;
@@ -271,9 +262,7 @@ limpiarFiltroUsuarios() {
     }
   }
 
-  // ===========================
   // REASIGNAR TURNOS A UN MÉDICO (ADMIN)
-  // ===========================
 async reasignarTurnosAMedico(index: number) {
   const u = this.usuarios[index];
 
@@ -312,9 +301,7 @@ async reasignarTurnosAMedico(index: number) {
   }
 }
 
-  // ===========================
   // DAR DE BAJA
-  // ===========================
 async darBaja(index: number) {
   const u = this.usuarios[index];
 
@@ -344,9 +331,7 @@ async darBaja(index: number) {
   }
 }
 
-// ===========================
 // REACTIVAR USUARIO
-// ===========================
 async reactivarUsuario(index: number) {
   const u = this.usuarios[index];
 
@@ -375,7 +360,6 @@ async reactivarUsuario(index: number) {
   }
 }
 
-  // ===========================
   // GENERAR TURNOS (ARREGLADO)
 async generarTurnos() {
 
@@ -395,10 +379,7 @@ async generarTurnos() {
   try {
     const horarios = ['09:00', '10:30', '12:00', '13:30', '15:00', '16:30'];
     const diasAGenerar = 14;
-
     const db = getFirestore();
-
-    // Traer médicos
     const medicosSnap = await getDocs(
       query(collection(db, 'usuarios'), where('rol', '==', 'medico'))
     );
@@ -415,7 +396,6 @@ async generarTurnos() {
       return;
     }
 
-    // Traemos todos los turnos existentes
     const allTurnosSnap = await getDocs(collection(db, 'turnos'));
     const existingKeys = new Set<string>();
 
@@ -431,20 +411,16 @@ async generarTurnos() {
       }
     });
 
-    // 📌 Determinar fecha inicial de generación
     let fechaInicio: Date;
 
     if (!ultimaFecha) {
-      // Si no hay turnos ⇒ arrancamos desde mañana
       fechaInicio = new Date();
       fechaInicio.setDate(fechaInicio.getDate() + 1);
     } else {
-      // Si hay turnos ⇒ tomamos la próxima fecha hábil después de la última
       fechaInicio = new Date(ultimaFecha);
       fechaInicio.setDate(fechaInicio.getDate() + 1);
     }
 
-    // Saltar fines de semana
     while (fechaInicio.getDay() === 0 || fechaInicio.getDay() === 6) {
       fechaInicio.setDate(fechaInicio.getDate() + 1);
     }
@@ -452,7 +428,6 @@ async generarTurnos() {
     let diasGenerados = 0;
     let offsetMedico = 0;
 
-    // 🔥 Generar exactamente 14 días hábiles posteriores al último turno
     while (diasGenerados < diasAGenerar) {
 
       const fecha = new Date(fechaInicio);
@@ -462,7 +437,6 @@ async generarTurnos() {
 
       if (diaSemana !== 0 && diaSemana !== 6) {
 
-        // Especialidad del día rotada
         const especialidad = especialidades[diasGenerados % especialidades.length];
         const medicosEsp = medicos.filter(m => m.especialidad === especialidad);
 
@@ -492,16 +466,13 @@ async generarTurnos() {
         offsetMedico++;
       }
 
-      // siguiente día
       fechaInicio.setDate(fechaInicio.getDate() + 1);
 
-      // saltar fin de semana
       while (fechaInicio.getDay() === 0 || fechaInicio.getDay() === 6) {
         fechaInicio.setDate(fechaInicio.getDate() + 1);
       }
     }
 
-    // Actualizar lista
     const turnosSnap2 = await getDocs(collection(db, 'turnos'));
     this.turnos = turnosSnap2.docs.map(d => ({ id: d.id, ...d.data() })) as Turno[];
     this.turnosFiltrados = [...this.turnos];
@@ -520,9 +491,7 @@ async generarTurnos() {
 }
 
 
-  // ===========================
   // FILTROS
-  // ===========================
   filtrarTurnos() {
     this.turnosFiltrados = this.turnos.filter(t => {
       const matchFecha = !this.filtroFecha || t.fecha === this.filtroFecha;
@@ -552,9 +521,7 @@ async generarTurnos() {
     this.fechaSeleccionada = this.fechaSeleccionada === fecha ? null : fecha;
   }
 
-  // ===========================
   // CANCELAR TURNO
-  // ===========================
   async cancelarTurno(index: number) {
     const turno = this.misTurnos[index];
     if (!turno) return;
