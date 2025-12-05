@@ -276,6 +276,7 @@
               {{ esp }}
             </option>
           </select>
+          <input type="text" id="buscar-dni" class="form-control" placeholder="Buscar por DNI" [(ngModel)]="filtroDni" (input)="filtrarUsuarios()" />
           <button class="btn btn-outline-secondary" (click)="limpiarFiltroUsuarios()">
             Limpiar filtros
           </button>
@@ -285,6 +286,7 @@
             <tr>
               <th>Nombre</th>
               <th>Email</th>
+              <th>DNI</th>
               <th>Rol</th>
               <th>Especialidad</th>
               <th>Estado</th>
@@ -295,6 +297,7 @@
             <tr *ngFor="let u of usuariosFiltrados; let i = index">
               <td>{{ u.nombre }}</td>
               <td>{{ u.email }}</td>
+              <td>{{ u.dni || 'N/A' }}</td>
               <td>{{ u.rol }}</td>
               <td>
               <ng-container *ngIf="u.rol === 'medico'; else noEsMedico">
@@ -323,10 +326,11 @@
     <section *ngIf="seccionActiva === 'turnos'" class="turnos-admin1">
       <div class="turnos-header d-flex justify-content-between align-items-center mb-3">
         <h2>Gestión de Turnos</h2>
+        <button type="button" class="btn btn-sm btn-danger ms-2" (click)="limpiarTurnosViejos()"> Eliminar turnos viejos disponibles </button>
         <button class="btn btn-danger" (click)="generarTurnos()">GENERAR TURNOS (14 DÍAS)</button>
       </div>
+      
 
-      <!-- filtros y lista de turnos (usa tus funciones existentes) -->
       <div class="filtros-turnos mb-3">
         <input type="text" placeholder="Buscar por especialidad..." [(ngModel)]="filtroEspecialidad" (input)="filtrarTurnos()" class="form-control mb-2" />
         <input type="date" [(ngModel)]="filtroFecha" (change)="filtrarTurnos()" class="form-control mb-2" />
@@ -374,7 +378,6 @@
   </main>
 </div>
 
-<!-- SPINNER si no hay usuario cargado (fallback) -->
 <div *ngIf="cargando" class="spinner-container">
   <div class="spinner"></div>
   <p>Cargando perfil...</p>

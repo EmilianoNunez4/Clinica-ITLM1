@@ -21,6 +21,7 @@ interface Usuario {
   nombre: string;
   email: string;
   rol: string;
+  dni?: string;
   fechaRegistro?: string;
 }
 
@@ -39,6 +40,7 @@ export class AuthComponent {
   registerName = '';
   registerEmail = '';
   registerPass = '';
+  registerDni = '';
 
   // Alternar entre login y registro
   isRegister = false;
@@ -56,6 +58,7 @@ export class AuthComponent {
     this.registerName = '';
     this.registerEmail = '';
     this.registerPass = '';
+    this.registerDni = '';
   }
 
   // ===========================
@@ -127,8 +130,11 @@ export class AuthComponent {
     this.registerEmail = this.registerEmail.trim().toLowerCase();
     this.registerPass = this.registerPass.trim();
     this.registerName = this.registerName.trim();
+    this.registerDni = this.registerDni.trim();
 
-    if (!this.registerName || !this.registerEmail || !this.registerPass) {
+    
+
+    if (!this.registerName || !this.registerEmail || !this.registerPass || !this.registerDni) {
       await Swal.fire({
         icon: 'warning',
         title: 'Campos incompletos',
@@ -168,6 +174,7 @@ export class AuthComponent {
         nombre: this.registerName,
         email: this.registerEmail,
         rol,
+        dni: this.registerDni,
         fechaRegistro: new Date().toISOString(),
       };
 

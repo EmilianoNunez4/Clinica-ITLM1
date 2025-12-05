@@ -41,13 +41,15 @@ export class HomeComponent implements OnInit {
   usuariosFiltrados: any[] = [];
   especialidadesUnicas: string[] = [];
 
+  filtroDni: string = '';
+
   cerrandoSesion: boolean = false;
   cargando: boolean = true;
   logoutEnProgreso: boolean = false;
 
   constructor(private firestore: Firestore, private router: Router) {}
   
-async ngOnInit() {
+  async ngOnInit() {
     const auth = getAuth();
 
     onAuthStateChanged(auth, async (user) => {
@@ -77,7 +79,11 @@ async ngOnInit() {
 
       // USUARIOS
       const usuariosSnap = await getDocs(collection(db, 'usuarios'));
-      this.usuarios = usuariosSnap.docs.map(d => d.data());
+      // 👇 Guardamos también el uid del documento
+      this.usuarios = usuariosSnap.docs.map(d => ({
+        uid: d.id,
+        ...d.data()
+      }));
       this.usuariosFiltrados = [...this.usuarios];
 
       // ESPECIALIDADES ÚNICAS
@@ -100,25 +106,36 @@ async ngOnInit() {
       }
     });
   }
+
   filtrarUsuarios() {
-  this.usuariosFiltrados = this.usuarios.filter(u => {
+    this.usuariosFiltrados = this.usuarios.filter(u => {
 
-    const coincideRol =
-      this.filtroRol === '' || u.rol === this.filtroRol;
+      const coincideRol =
+        this.filtroRol === '' || u.rol === this.filtroRol;
 
-    const coincideEsp =
-      this.filtroEspecialidadUsuario === '' ||
-      (u.rol === 'medico' && u.especialidad === this.filtroEspecialidadUsuario);
+      const coincideEsp =
+        this.filtroEspecialidadUsuario === '' ||
+        (u.rol === 'medico' && u.especialidad === this.filtroEspecialidadUsuario);
 
-    return coincideRol && coincideEsp;
-  });
-}
+      // filtro por DNI
+      const dniFiltro = this.filtroDni.trim();
+      const coincideDni =
+        dniFiltro === '' ||
+        
+        // filtro cuando no hay dni registrado
+        (!u.dni && (dniFiltro === 'na' || dniFiltro === 'n/a' || dniFiltro === 'sin')) ||
+        (u.dni && u.dni.toString().includes(dniFiltro));
 
-limpiarFiltroUsuarios() {
-  this.filtroRol = '';
-  this.filtroEspecialidadUsuario = '';
-  this.usuariosFiltrados = [...this.usuarios];
-}
+      return coincideRol && coincideEsp && coincideDni;
+    });
+  }
+
+  limpiarFiltroUsuarios() {
+    this.filtroRol = '';
+    this.filtroEspecialidadUsuario = '';
+    this.filtroDni = '';               // 🔹 limpiamos también el filtro de DNI
+    this.usuariosFiltrados = [...this.usuarios];
+  }
 
   // ===========================
   // LOGOUT
@@ -137,7 +154,6 @@ limpiarFiltroUsuarios() {
       }, 1200);
     });
   }
-
 
   // ===========================
   // EDITAR CAMPO TURNO
@@ -235,9 +251,9 @@ limpiarFiltroUsuarios() {
     }
   }
 
-// ===========================
-// ASIGNAR ESPECIALIDAD A MÉDICO
-// ===========================
+  // ===========================
+  // ASIGNAR ESPECIALIDAD A MÉDICO
+  // ===========================
   async asignarEspecialidad(index: number) {
     const u = this.usuarios[index];
     if (!u || u.rol !== 'medico') return;
@@ -273,106 +289,106 @@ limpiarFiltroUsuarios() {
   // ===========================
   // REASIGNAR TURNOS A UN MÉDICO (ADMIN)
   // ===========================
-async reasignarTurnosAMedico(index: number) {
-  const u = this.usuarios[index];
+  async reasignarTurnosAMedico(index: number) {
+    const u = this.usuarios[index];
 
-  const confirm = await Swal.fire({
-    title: '¿Reasignar turnos?',
-    text: `Esto reasignará los turnos de la especialidad "${u.especialidad}" al médico ${u.nombre}.`,
-    icon: 'warning',
-    showCancelButton: true,
-    confirmButtonText: 'Reasignar',
-    cancelButtonText: 'Cancelar'
-  });
+    const confirm = await Swal.fire({
+      title: '¿Reasignar turnos?',
+      text: `Esto reasignará los turnos de la especialidad "${u.especialidad}" al médico ${u.nombre}.`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Reasignar',
+      cancelButtonText: 'Cancelar'
+    });
 
-  if (!confirm.isConfirmed) return;
+    if (!confirm.isConfirmed) return;
 
-  try {
-    const turnosSnap = await getDocs(
-      query(collection(this.firestore as any, 'turnos'), where('especialidad', '==', u.especialidad))
-    );
+    try {
+      const turnosSnap = await getDocs(
+        query(collection(this.firestore as any, 'turnos'), where('especialidad', '==', u.especialidad))
+      );
 
-    let actualizado = 0;
+      let actualizado = 0;
 
-    for (const docSnap of turnosSnap.docs) {
-      const data: any = docSnap.data();
-      if (!data.uidMedico || data.uidMedico !== u.uid) {
-        const ref = doc(this.firestore, 'turnos', docSnap.id);
-        await updateDoc(ref, { uidMedico: u.uid });
-        actualizado++;
+      for (const docSnap of turnosSnap.docs) {
+        const data: any = docSnap.data();
+        if (!data.uidMedico || data.uidMedico !== u.uid) {
+          const ref = doc(this.firestore, 'turnos', docSnap.id);
+          await updateDoc(ref, { uidMedico: u.uid });
+          actualizado++;
+        }
       }
+
+      Swal.fire('Éxito', `Se reasignaron ${actualizado} turnos.`, 'success');
+
+    } catch (err) {
+      console.error(err);
+      Swal.fire('Error', 'No se pudieron reasignar los turnos.', 'error');
     }
-
-    Swal.fire('Éxito', `Se reasignaron ${actualizado} turnos.`, 'success');
-
-  } catch (err) {
-    console.error(err);
-    Swal.fire('Error', 'No se pudieron reasignar los turnos.', 'error');
   }
-}
 
   // ===========================
   // DAR DE BAJA
   // ===========================
-async darBaja(index: number) {
-  const u = this.usuarios[index];
+  async darBaja(index: number) {
+    const u = this.usuarios[index];
 
-  const confirm = await Swal.fire({
-    title: '¿Dar de baja?',
-    text: `El usuario ${u.nombre} quedará inactivo.`,
-    icon: 'warning',
-    showCancelButton: true,
-    confirmButtonText: 'Dar de baja',
-    confirmButtonColor: '#d33',
-    cancelButtonText: 'Cancelar'
-  });
+    const confirm = await Swal.fire({
+      title: '¿Dar de baja?',
+      text: `El usuario ${u.nombre} quedará inactivo.`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Dar de baja',
+      confirmButtonColor: '#d33',
+      cancelButtonText: 'Cancelar'
+    });
 
-  if (!confirm.isConfirmed) return;
+    if (!confirm.isConfirmed) return;
 
-  try {
-    const ref = doc(this.firestore, 'usuarios', u.uid);
-    await updateDoc(ref, { activo: false, estado: 'inactivo' });
+    try {
+      const ref = doc(this.firestore, 'usuarios', u.uid);
+      await updateDoc(ref, { activo: false, estado: 'inactivo' });
 
-    this.usuarios[index] = { ...u, activo: false, estado: 'inactivo' };
+      this.usuarios[index] = { ...u, activo: false, estado: 'inactivo' };
 
-    Swal.fire('Hecho', 'Usuario dado de baja.', 'success');
+      Swal.fire('Hecho', 'Usuario dado de baja.', 'success');
 
-  } catch (err) {
-    console.error(err);
-    Swal.fire('Error', 'No se pudo dar de baja.', 'error');
+    } catch (err) {
+      console.error(err);
+      Swal.fire('Error', 'No se pudo dar de baja.', 'error');
+    }
   }
-}
 
-// ===========================
-// REACTIVAR USUARIO
-// ===========================
-async reactivarUsuario(index: number) {
-  const u = this.usuarios[index];
+  // ===========================
+  // REACTIVAR USUARIO
+  // ===========================
+  async reactivarUsuario(index: number) {
+    const u = this.usuarios[index];
 
-  const confirm = await Swal.fire({
-    title: '¿Reactivar usuario?',
-    text: `${u.nombre} volverá a estar activo.`,
-    icon: 'question',
-    showCancelButton: true,
-    confirmButtonText: 'Reactivar',
-    cancelButtonText: 'Cancelar'
-  });
+    const confirm = await Swal.fire({
+      title: '¿Reactivar usuario?',
+      text: `${u.nombre} volverá a estar activo.`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Reactivar',
+      cancelButtonText: 'Cancelar'
+    });
 
-  if (!confirm.isConfirmed) return;
+    if (!confirm.isConfirmed) return;
 
-  try {
-    const ref = doc(this.firestore, 'usuarios', u.uid);
-    await updateDoc(ref, { activo: true, estado: 'activo' });
+    try {
+      const ref = doc(this.firestore, 'usuarios', u.uid);
+      await updateDoc(ref, { activo: true, estado: 'activo' });
 
-    this.usuarios[index] = { ...u, activo: true, estado: 'activo' };
+      this.usuarios[index] = { ...u, activo: true, estado: 'activo' };
 
-    Swal.fire('Hecho', 'Usuario reactivado.', 'success');
+      Swal.fire('Hecho', 'Usuario reactivado.', 'success');
 
-  } catch (err) {
-    console.error(err);
-    Swal.fire('Error', 'No se pudo reactivar.', 'error');
+    } catch (err) {
+      console.error(err);
+      Swal.fire('Error', 'No se pudo reactivar.', 'error');
+    }
   }
-}
 
   // ===========================
   // GENERAR TURNOS (ARREGLADO)
@@ -500,8 +516,9 @@ async reactivarUsuario(index: number) {
       showCancelButton: true,
       confirmButtonText: 'Sí, cancelar',
       cancelButtonText: 'No',
+      confirmButtonTextColor: '#fff',
       confirmButtonColor: '#d33',
-    });
+    } as any);
 
     if (!confirmar.isConfirmed) return;
 
@@ -542,4 +559,90 @@ async reactivarUsuario(index: number) {
     this.router.navigate(['/solicitar-turno']);
   }
 
+  private parseFechaTurno(fechaStr: string): Date | null {
+  if (!fechaStr) return null;
+
+  // Formato ISO: YYYY-MM-DD
+  if (fechaStr.includes('-')) {
+    const [anio, mes, dia] = fechaStr.split('-').map(Number);
+    if (!anio || !mes || !dia) return null;
+    return new Date(anio, mes - 1, dia);
+  }
+
+  // Formato DD/MM/YYYY o YYYY/MM/DD
+  if (fechaStr.includes('/')) {
+    const partes = fechaStr.split('/');
+    if (partes.length === 3) {
+      let d: number, m: number, a: number;
+      if (partes[0].length === 4) {
+        // YYYY/MM/DD
+        [a, m, d] = partes.map(Number);
+      } else {
+        // DD/MM/YYYY
+        [d, m, a] = partes.map(Number);
+      }
+      if (!a || !m || !d) return null;
+      return new Date(a, m - 1, d);
+    }
+  }
+
+  return null;
+}
+
+async limpiarTurnosViejos() {
+  const hoy = new Date();
+  const hoySinHora = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate());
+
+  // 1) Buscar en el array local los turnos disponibles con fecha < hoy
+  const aBorrar = this.turnos.filter(t => {
+    if (t.estado !== 'disponible') return false;
+
+    const fecha = this.parseFechaTurno(t.fecha);
+    if (!fecha) return false;
+
+    const fechaSinHora = new Date(fecha.getFullYear(), fecha.getMonth(), fecha.getDate());
+    return fechaSinHora.getTime() < hoySinHora.getTime();
+  });
+
+  if (!aBorrar.length) {
+    await Swal.fire(
+      'Sin turnos viejos',
+      'No hay turnos disponibles con fecha anterior a hoy para eliminar.',
+      'info'
+    );
+    return;
+  }
+
+  const confirm = await Swal.fire({
+    title: 'Eliminar turnos viejos',
+    text: `Se eliminarán ${aBorrar.length} turnos disponibles con fecha anterior a hoy.`,
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonText: 'Eliminar',
+    cancelButtonText: 'Cancelar',
+    confirmButtonColor: '#d33'
+  });
+
+  if (!confirm.isConfirmed) return;
+
+  const db = getFirestore();
+  let borrados = 0;
+
+  for (const t of aBorrar) {
+    if (!t.id) continue;
+    await deleteDoc(doc(db, 'turnos', t.id));
+    borrados++;
+  }
+
+  // 3) Actualizar arrays locales
+  this.turnos = this.turnos.filter(t => !aBorrar.includes(t));
+  this.turnosFiltrados = this.turnosFiltrados.filter(t => !aBorrar.includes(t));
+  this.misTurnos = this.misTurnos.filter(t => !aBorrar.includes(t));
+
+  await Swal.fire(
+    'Listo',
+    `Se eliminaron ${borrados} turnos viejos disponibles.`,
+    'success'
+  );
+}
 }

@@ -1,5 +1,13 @@
 import { Component, OnInit, inject } from '@angular/core';
-import { Firestore, collection, query, where, doc, updateDoc, getDocs } from '@angular/fire/firestore';
+import {
+  Firestore,
+  collection,
+  query,
+  where,
+  doc,
+  updateDoc,
+  getDocs,
+} from '@angular/fire/firestore';
 import { Auth } from '@angular/fire/auth';
 import { getAuth, signOut, onAuthStateChanged, User } from 'firebase/auth';
 import { Timestamp } from 'firebase/firestore';
@@ -14,6 +22,7 @@ interface Turno {
   nombrePaciente?: string;
   uidMedico?: string;
   uidPaciente?: string;
+  observacion?: string;
 }
 
 @Component({
@@ -28,75 +37,102 @@ export class MedicoComponent implements OnInit {
 
   turnosActivos: Turno[] = [];
   turnosAtendidos: Turno[] = [];
+
   uid: string = '';
   nombre: string = '';
+  especialidadMedico: string = '';
+
   verHistorial = false;
-  usuarioActual: any = null; // ✅ agregamos esto para evitar error en HTML
+  usuarioActual: any = null;
   removingTurnos: Set<string> = new Set();
   processingTurnos: Set<string> = new Set();
 
+  filtroEstadoTurno: string = '';
+
+  pageSizeActivos: number = 30;
+  paginaActualActivos: number = 1;
+
   constructor(private router: Router) {}
 
-  async ngOnInit() {
-    const user = this.auth.currentUser;
-      const authInstance = getAuth();
+  get turnosActivosFiltradosBase(): Turno[] {
+    if (!this.filtroEstadoTurno) {
+      return this.turnosActivos;
+    }
+    return this.turnosActivos.filter(t => t.estado === this.filtroEstadoTurno);
+  }
 
-      // Cuando cambia el estado de autenticación (login/logout), cargamos perfil y turnos
-      onAuthStateChanged(authInstance, async (user: User | null) => {
-        if (user) {
-          this.uid = user.uid;
-          this.usuarioActual = user; // almacenamos el usuario para mostrar en la vista
-          await this.cargarPerfil();
-          await this.cargarTurnos();
-        } else {
-          // usuario no logueado: limpiar datos locales
-          this.uid = '';
-          this.usuarioActual = null;
-          this.turnosActivos = [];
-          this.turnosAtendidos = [];
-        }
-      });
+  get totalPaginasActivos(): number {
+    const total = this.turnosActivosFiltradosBase.length;
+    return total > 0 ? Math.ceil(total / this.pageSizeActivos) : 1;
+  }
+
+  get turnosActivosFiltrados(): Turno[] {
+    const inicio = (this.paginaActualActivos - 1) * this.pageSizeActivos;
+    const fin = inicio + this.pageSizeActivos;
+    return this.turnosActivosFiltradosBase.slice(inicio, fin);
+  }
+
+  async ngOnInit() {
+    const authInstance = getAuth();
+
+    onAuthStateChanged(authInstance, async (user: User | null) => {
+      if (user) {
+        this.uid = user.uid;
+        this.usuarioActual = user;
+
+        await this.cargarPerfil();
+        await this.cargarTurnos();
+      } else {
+        this.uid = '';
+        this.usuarioActual = null;
+        this.turnosActivos = [];
+        this.turnosAtendidos = [];
+      }
+    });
   }
 
   async cargarPerfil() {
     const usuariosRef = collection(this.firestore, 'usuarios');
-    const q = query(usuariosRef, where('uid', '==', this.uid));
-    const snapshot = await getDocs(q);
+    const qUsers = query(usuariosRef, where('uid', '==', this.uid));
+    const snapshot = await getDocs(qUsers);
+
     snapshot.forEach((docSnap) => {
-      this.nombre = (docSnap.data() as any).nombre;
+      const data: any = docSnap.data();
+      this.nombre = data.nombre;
+      this.especialidadMedico = data.especialidad || '';
     });
+
+    console.log('👨‍⚕️ Médico:', this.nombre, 'Especialidad:', this.especialidadMedico);
   }
 
   async cargarTurnos() {
-    const turnosRef = collection(this.firestore, 'turnos');
-    // Query: turnos asignados a este médico
-    const q = query(turnosRef, where('uidMedico', '==', this.uid));
-    const snapshot = await getDocs(q);
-
-    console.log('📌 cargarTurnos: UID del médico logueado:', this.uid);
-    console.log('📌 cargarTurnos: documentos obtenidos por query uidMedico=', this.uid, ' -> ', snapshot.size);
-    
-    // Logs adicionales: obtener TODOS los turnos sin filtro para ver estructura
-    const allTurnosSnap = await getDocs(collection(this.firestore, 'turnos'));
-    console.log('📄 TODOS los turnos en la BD (hasta 10):', allTurnosSnap.docs.slice(0, 10).map(d => ({
-      id: d.id,
-      uidMedico: (d.data() as any).uidMedico,
-      estado: (d.data() as any).estado,
-      fecha: (d.data() as any).fecha,
-      especialidad: (d.data() as any).especialidad
-    })));
-    
-    if (snapshot.empty) {
-      console.warn('⚠️ cargarTurnos: snapshot vacío — no se encontraron turnos con uidMedico igual a', this.uid);
+    if (!this.especialidadMedico) {
+      console.warn('⚠️ Médico sin especialidad, no se pueden filtrar turnos.');
+      this.turnosActivos = [];
+      this.turnosAtendidos = [];
+      return;
     }
+
+    const turnosRef = collection(this.firestore, 'turnos');
+    const qTurnos = query(
+      turnosRef,
+      where('especialidad', '==', this.especialidadMedico)
+    );
+    const snapshot = await getDocs(qTurnos);
+
+    console.log('📌 Turnos con especialidad =', this.especialidadMedico, '->', snapshot.size);
 
     const todosLosTurnos: Turno[] = snapshot.docs.map((docSnap) => {
       const data: any = docSnap.data();
-      const fecha = data.fecha instanceof Timestamp ? data.fecha.toDate().toISOString().split('T')[0] : data.fecha;
 
-      // Normalizar nombre de paciente: el código en otros componentes usa 'paciente'
+      const fecha =
+        data.fecha instanceof Timestamp
+          ? data.fecha.toDate().toISOString().split('T')[0]
+          : data.fecha;
+
       const nombrePaciente = data.nombrePaciente ?? data.paciente ?? null;
-      const uidPaciente = data.uidPaciente ?? data.uidPaciente ?? data.uidPaciente ?? null;
+      const uidPaciente = data.uidPaciente ?? null;
+
 
       const mapped: any = {
         id: docSnap.id,
@@ -104,32 +140,38 @@ export class MedicoComponent implements OnInit {
         fecha,
         nombrePaciente,
         uidPaciente,
+        observacion: data.observacion ?? ''
       };
 
-      return mapped as Turno;
-    }) as Turno[];
+  return mapped as Turno;
+}) as Turno[];
 
-    // Log de ejemplo para debugging (hasta 6 docs)
-    console.log('📄 ejemplo turnos (hasta 6):', snapshot.docs.slice(0, 6).map(d => ({ id: d.id, ...d.data() })));
-
-    // Ordenar cronológicamente: por fecha asc, luego hora asc
     todosLosTurnos.sort((a, b) => {
-      const fechaCmp = a.fecha.localeCompare(b.fecha);
-      return fechaCmp !== 0 ? fechaCmp : a.hora.localeCompare(b.hora);
+      const f = a.fecha.localeCompare(b.fecha);
+      return f !== 0 ? f : a.hora.localeCompare(b.hora);
     });
 
-    // Mostrar los turnos activos para este médico: todos los que NO estén marcados como 'atendido'
-    // (incluye 'disponible' y 'reservado' para que el médico vea los turnos que reservaron pacientes)
-    this.turnosActivos = todosLosTurnos.filter(t => t.estado !== 'atendido');
+    this.turnosActivos   = todosLosTurnos.filter(t => t.estado !== 'atendido');
     this.turnosAtendidos = todosLosTurnos.filter(t => t.estado === 'atendido');
 
-    // Logs para debugging rápido
-    console.log('🔎 turnos totales encontrados:', todosLosTurnos.length);
-    console.log('🔹 turnos activos (no atendidos):', this.turnosActivos.length);
-    console.log('🔸 turnos atendidos:', this.turnosAtendidos.length);
+    if (this.paginaActualActivos > this.totalPaginasActivos) {
+      this.paginaActualActivos = 1;
+    }
 
-    console.log('📅 Turnos activos:', this.turnosActivos);
-    console.log('📅 Turnos atendidos:', this.turnosAtendidos);
+    console.log('🔎 turnos totales:', todosLosTurnos.length);
+    console.log('🔹 activos:', this.turnosActivos.length);
+    console.log('🔸 atendidos:', this.turnosAtendidos.length);
+  }
+
+  onFiltroEstadoChange(valor: string) {
+    this.filtroEstadoTurno = valor;
+    this.paginaActualActivos = 1;
+  }
+
+  irPaginaActivos(delta: number) {
+    const nueva = this.paginaActualActivos + delta;
+    if (nueva < 1 || nueva > this.totalPaginasActivos) return;
+    this.paginaActualActivos = nueva;
   }
 
   async cambiarEstado(turnoId: string, nuevoEstado: string) {
@@ -138,38 +180,72 @@ export class MedicoComponent implements OnInit {
     await this.cargarTurnos();
   }
 
-  // Animación visual: marcar como atendido con efecto, quitar de la lista activa y mover a atendidos
   async marcarAtendido(turno: Turno) {
     if (!turno?.id) return;
     const id = turno.id;
-    // marcar localmente para animación
-    this.removingTurnos.add(id);
 
-    // Marcar como processing para deshabilitar el botón y mostrar spinner
+    this.removingTurnos.add(id);
     this.processingTurnos.add(id);
 
-    // Esperar la animación (350ms)
     setTimeout(async () => {
       try {
         const turnoRef = doc(this.firestore, 'turnos', id);
         await updateDoc(turnoRef, { estado: 'atendido' });
 
-        // actualizar arrays locales
         this.turnosActivos = this.turnosActivos.filter(t => t.id !== id);
         const atendido = { ...turno, estado: 'atendido' } as Turno;
+
         this.turnosAtendidos = [atendido, ...this.turnosAtendidos].sort((a, b) => {
-          const fechaCmp = a.fecha.localeCompare(b.fecha);
-          return fechaCmp !== 0 ? fechaCmp : a.hora.localeCompare(b.hora);
+          const f = a.fecha.localeCompare(b.fecha);
+          return f !== 0 ? f : a.hora.localeCompare(b.hora);
         });
       } catch (err) {
         console.error('Error marcando turno como atendido', err);
       } finally {
-        // Limpiar estado de animación y processing
         this.removingTurnos.delete(id);
         this.processingTurnos.delete(id);
       }
     }, 360);
   }
+
+  async cancelarTurnoMedico(turno: Turno) {
+  if (!turno?.id) return;
+
+  const confirmar = confirm(
+    `¿Cancelar el turno del ${turno.fecha} a las ${turno.hora}?`
+  );
+  if (!confirmar) return;
+
+  try {
+    const turnoRef = doc(this.firestore, 'turnos', turno.id);
+    await updateDoc(turnoRef, {
+      estado: 'disponible',
+      nombrePaciente: null,
+      paciente: null,
+      uidPaciente: null,
+    });
+
+    await this.cargarTurnos();
+  } catch (err) {
+    console.error('Error al cancelar turno desde médico:', err);
+  }
+
+}
+
+async guardarObservacion(turno: Turno) {
+  if (!turno?.id) return;
+
+  try {
+    const turnoRef = doc(this.firestore, 'turnos', turno.id);
+    await updateDoc(turnoRef, {
+      observacion: turno.observacion ?? ''
+    });
+
+    console.log('Observación guardada para turno', turno.id);
+  } catch (err) {
+    console.error('Error al guardar observación:', err);
+  }
+}
 
   cerrarSesion() {
     const auth = getAuth();
@@ -178,9 +254,4 @@ export class MedicoComponent implements OnInit {
       this.router.navigate(['/auth']);
     });
   }
-}
-
-
-
-
-
+} 

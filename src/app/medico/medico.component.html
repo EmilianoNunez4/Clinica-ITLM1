@@ -25,40 +25,101 @@
       <h2 class="main-title">Panel de Turnos</h2>
     </header>
 
+    <div class="mb-3 d-flex flex-wrap gap-2 align-items-end">
+      <div>
+        <label for="filtroEstadoTurno" class="form-label mb-1">Estado del turno</label>
+        <select id="filtroEstadoTurno"
+                class="form-select form-select-sm"
+                [(ngModel)]="filtroEstadoTurno"
+                (ngModelChange)="onFiltroEstadoChange($event)">
+          <option value="">Todos</option>
+          <option value="disponible">Disponibles</option>
+          <option value="reservado">Reservados</option>
+        </select>
+      </div>
+    </div>
+
     <section class="turnos-section">
       
       <!-- Turnos Activos -->
       <div *ngIf="!verHistorial">
-        <div *ngIf="turnosActivos.length > 0; else noActive">
+        <div *ngIf="turnosActivosFiltrados.length > 0; else noActive">
           <div class="turnos-list">
 
             <article
-              *ngFor="let turno of turnosActivos"
+              *ngFor="let turno of turnosActivosFiltrados"
               class="turno-card"
               [class.removing]="removingTurnos.has(turno.id)"
               [class.con-paciente]="turno.nombrePaciente"
               [class.sin-paciente]="!turno.nombrePaciente"
             >
               <div class="turno-grid">
-                <div class="turno-item"><div class="label">Fecha</div><div class="value">{{ turno.fecha }}</div></div>
-                <div class="turno-item"><div class="label">Hora</div><div class="value">{{ turno.hora }}</div></div>
-                <div class="turno-item"><div class="label">Paciente</div><div class="value">{{ turno.nombrePaciente ? turno.nombrePaciente : 'Disponible' }}</div></div>
-                <div class="turno-item"><div class="label">Especialidad</div><div class="value">{{ turno.especialidad }}</div></div>
-                <div class="turno-item"><div class="label">Estado</div><div class="value">{{ turno.estado }}</div></div>
+                <div class="turno-item">
+                  <div class="label">Fecha</div>
+                  <div class="value">{{ turno.fecha }}</div>
+                </div>
+                <div class="turno-item">
+                  <div class="label">Hora</div>
+                  <div class="value">{{ turno.hora }}</div>
+                </div>
+                <div class="turno-item">
+                  <div class="label">Paciente</div>
+                  <div class="value">
+                    {{ turno.nombrePaciente ? turno.nombrePaciente : 'Disponible' }}
+                  </div>
+                </div>
+                <div class="turno-item">
+                  <div class="label">Especialidad</div>
+                  <div class="value">{{ turno.especialidad }}</div>
+                </div>
+                <div class="turno-item">
+                  <div class="label">Estado</div>
+                  <div class="value">{{ turno.estado }}</div>
+                </div>
               </div>
 
               <div class="turno-actions">
-                <button
-                  *ngIf="turno.estado !== 'atendido'"
-                  class="btn-attend"
-                  (click)="marcarAtendido(turno)"
-                  [disabled]="!turno.nombrePaciente"
-                >
+
+                <div class="turno-nota">
+                  <label class="nota-label">Observaciones</label>
+                  <textarea class="nota-textarea" [(ngModel)]="turno.observacion" placeholder="Escribí aquí notas sobre la consulta..." rows="2"></textarea>
+
+                  <button type="button" class="btn-accion btn-guardar-nota" (click)="guardarObservacion(turno)"> Guardar nota </button>
+                </div>
+
+                <button *ngIf="turno.estado === 'reservado'" type="button" class="btn-accion btn-cancelar" (click)="cancelarTurnoMedico(turno)"> Cancelar turno
+                </button>
+
+                <button *ngIf="turno.estado !== 'atendido'" type="button" class="btn-accion btn-attend" (click)="marcarAtendido(turno)" [disabled]="!turno.nombrePaciente">
                   Marcar como Atendido
                 </button>
+
               </div>
             </article>
 
+          </div>
+
+          <!-- Paginación de 30 -->
+          <div class="medico-pagination mt-3" *ngIf="totalPaginasActivos > 1">
+            <button
+              type="button"
+              class="btn btn-sm btn-outline-secondary me-2"
+              (click)="irPaginaActivos(-1)"
+              [disabled]="paginaActualActivos === 1">
+              ◀ Anterior
+            </button>
+
+            <span class="me-2">
+              Página {{ paginaActualActivos }} de {{ totalPaginasActivos }}
+            </span>
+
+            <button
+              type="button"
+              class="btn btn-sm btn-outline-secondary"
+              (click)="irPaginaActivos(1)"
+              [disabled]="paginaActualActivos === totalPaginasActivos">
+              Siguiente ▶
+            </button>
           </div>
         </div>
 
@@ -73,11 +134,34 @@
           <div class="turnos-list">
             <article *ngFor="let turno of turnosAtendidos" class="turno-card">
               <div class="turno-grid">
-                <div class="turno-item"><div class="label">Fecha</div><div class="value">{{ turno.fecha }}</div></div>
-                <div class="turno-item"><div class="label">Hora</div><div class="value">{{ turno.hora }}</div></div>
-                <div class="turno-item"><div class="label">Paciente</div><div class="value">{{ turno.nombrePaciente ? turno.nombrePaciente : '—' }}</div></div>
-                <div class="turno-item"><div class="label">Especialidad</div><div class="value">{{ turno.especialidad }}</div></div>
-                <div class="turno-item"><div class="label">Estado</div><div class="value estado-atendido">{{ turno.estado }}</div></div>
+                <div class="turno-item">
+                  <div class="label">Fecha</div>
+                  <div class="value">{{ turno.fecha }}</div>
+                </div>
+                <div class="turno-item">
+                  <div class="label">Hora</div>
+                  <div class="value">{{ turno.hora }}</div>
+                </div>
+                <div class="turno-item">
+                  <div class="label">Paciente</div>
+                  <div class="value">
+                    {{ turno.nombrePaciente ? turno.nombrePaciente : '—' }}
+                  </div>
+                </div>
+                <div class="turno-item">
+                  <div class="label">Especialidad</div>
+                  <div class="value">{{ turno.especialidad }}</div>
+                </div>
+                <div class="turno-item">
+                  <div class="label">Estado</div>
+                  <div class="value estado-atendido">{{ turno.estado }}</div>
+                </div>
+
+                <!-- 🔹 Mostrar Observaciones si hay -->
+                <div class="turno-item" *ngIf="turno.observacion">
+                  <div class="label">Observaciones</div>
+                  <div class="value">{{ turno.observacion }}</div>
+                </div>
               </div>
             </article>
           </div>
