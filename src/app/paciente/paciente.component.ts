@@ -10,7 +10,7 @@ interface Turno {
   fecha: string;
   hora: string;
   especialidad: string;
-  paciente?: string;      // 👈 lo agregamos porque tu lógica usa este campo
+  paciente?: string;      
   uidPaciente?: string;
   uidMedico?: string;
 }
@@ -32,8 +32,9 @@ export class PacienteComponent implements OnInit {
   email: string = '';
 
   // Listas de turnos
-  turnosFuturos: Turno[] = [];
-  turnosPasados: Turno[] = [];
+turnosFuturos: any[] | null = null;
+turnosPasados: any[] | null = null;
+
 
   // Formulario de nuevo turno
   especialidades: string[] = ['Pediatría', 'Dermatología', 'Clínica'];
@@ -83,8 +84,6 @@ export class PacienteComponent implements OnInit {
       ...d.data()
     })) as Turno[];
 
-    // 👇 MIS turnos = misma lógica que tenías:
-    // this.misTurnos = this.turnos.filter((t) => t.paciente === this.usuario?.nombre);
     const misTurnos = todos.filter(t => t.paciente === this.nombre);
 
     this.turnosFuturos = misTurnos.filter(
@@ -105,7 +104,6 @@ export class PacienteComponent implements OnInit {
     const turnosRef = collection(this.firestore, 'turnos');
     const snapshot = await getDocs(turnosRef);
 
-    // Buscamos un turno disponible que matchee especialidad/fecha/hora
     const disponibles = snapshot.docs
       .map(d => ({ id: d.id, ...d.data() as any }))
       .filter(t =>
@@ -125,8 +123,8 @@ export class PacienteComponent implements OnInit {
 
     await updateDoc(turnoRef, {
       estado: 'reservado',
-      paciente: this.nombre,         // 👈 igual que en tu lógica original
-      uidPaciente: this.uid ?? null  // opcional, por si después querés filtrar por uid
+      paciente: this.nombre,        
+      uidPaciente: this.uid ?? null 
     });
 
     alert('Turno reservado con éxito.');
@@ -139,7 +137,6 @@ export class PacienteComponent implements OnInit {
     await updateDoc(turnoRef, { estado: 'disponible', paciente: null });
     await this.cargarTurnos();
   }
-
   // ================= CERRAR SESIÓN =================
   cerrarSesion(): void {
     const auth = getAuth();

@@ -31,9 +31,6 @@ interface Usuario {
   styleUrls: ['./auth.component.scss'],
 })
 export class AuthComponent {
-  // ===========================
-  // CAMPOS DEL FORMULARIO
-  // ===========================
   loginEmail = '';
   loginPass = '';
 
@@ -47,9 +44,7 @@ export class AuthComponent {
 
   constructor(private router: Router) {}
 
-  // ===========================
   // CAMBIAR FORMULARIO
-  // ===========================
   toggleRegister() {
     this.isRegister = !this.isRegister;
 
@@ -61,9 +56,7 @@ export class AuthComponent {
     this.registerDni = '';
   }
 
-  // ===========================
   // LOGIN
-  // ===========================
   async login() {
     try {
       const auth = getAuth();
@@ -123,9 +116,7 @@ export class AuthComponent {
     }
   }
 
-  // ===========================
   // REGISTRO
-  // ===========================
   async registrarUsuario() {
     this.registerEmail = this.registerEmail.trim().toLowerCase();
     this.registerPass = this.registerPass.trim();

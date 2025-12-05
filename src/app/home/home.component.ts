@@ -46,6 +46,7 @@ export class HomeComponent implements OnInit {
   cerrandoSesion: boolean = false;
   cargando: boolean = true;
   logoutEnProgreso: boolean = false;
+  cargandoTurnos: boolean = false;
 
   constructor(private firestore: Firestore, private router: Router) {}
   
@@ -54,7 +55,6 @@ export class HomeComponent implements OnInit {
 
     onAuthStateChanged(auth, async (user) => {
 
-      // 🔥 EVITAR QUE VUELVA AL HOME TRAS LOGOUT
       if (this.logoutEnProgreso) return;
 
       if (!user) {
@@ -137,12 +137,10 @@ export class HomeComponent implements OnInit {
     this.usuariosFiltrados = [...this.usuarios];
   }
 
-  // ===========================
   // LOGOUT
-  // ===========================
   logout() {
-    this.logoutEnProgreso = true;   // ⭐ evita rebote al home
-    this.cerrandoSesion = true;     // muestra spinner
+    this.logoutEnProgreso = true;   
+    this.cerrandoSesion = true;    
 
     const auth = getAuth();
 
@@ -157,7 +155,6 @@ export class HomeComponent implements OnInit {
 
   // ===========================
   // EDITAR CAMPO TURNO
-  // ===========================
   async editarCampo(index: number, campo: keyof Turno) {
     const db = getFirestore();
     const turno = this.turnos[index];
@@ -200,9 +197,7 @@ export class HomeComponent implements OnInit {
     }
   }
 
-  // ===========================
   // CAMBIAR ROL USUARIO
-  // ===========================
   async cambiarRol(index: number) {
     const order = ['paciente', 'medico', 'admin'];
     const u = this.usuarios[index];
@@ -286,7 +281,6 @@ export class HomeComponent implements OnInit {
     }
   }
 
-  // ===========================
   // REASIGNAR TURNOS A UN MÉDICO (ADMIN)
   // ===========================
   async reasignarTurnosAMedico(index: number) {
@@ -327,7 +321,6 @@ export class HomeComponent implements OnInit {
     }
   }
 
-  // ===========================
   // DAR DE BAJA
   // ===========================
   async darBaja(index: number) {
@@ -390,76 +383,116 @@ export class HomeComponent implements OnInit {
     }
   }
 
-  // ===========================
   // GENERAR TURNOS (ARREGLADO)
-  // ===========================
-  async generarTurnos() {
+async generarTurnos() {
 
-    // SOLO 6 TURNOS POR DÍA
+  Swal.fire({
+    title: "Generando turnos...",
+    text: "Esto puede tardar unos segundos",
+    allowOutsideClick: false,
+    allowEscapeKey: false,
+    allowEnterKey: false,
+    didOpen: () => {
+      Swal.showLoading();
+    }
+  });
+
+  this.cargandoTurnos = true;
+
+  try {
     const horarios = ['09:00', '10:30', '12:00', '13:30', '15:00', '16:30'];
     const diasAGenerar = 14;
-
     const db = getFirestore();
-
     const medicosSnap = await getDocs(
       query(collection(db, 'usuarios'), where('rol', '==', 'medico'))
     );
 
-    const medicos = medicosSnap.docs.map(doc => ({
-      uid: doc.id,
-      ...(doc.data() as any)
-    }));
+    const medicos = medicosSnap.docs.map(d => ({ uid: d.id, ...(d.data() as any) }));
 
     const especialidades = Array.from(
-      new Set(medicos.map(m => m.especialidad).filter(e => e))
+      new Set(medicos.map(m => m.especialidad).filter((e: any) => e))
     );
 
     if (especialidades.length === 0) {
+      Swal.close();
       Swal.fire('Advertencia', 'No hay médicos con especialidades asignadas.', 'warning');
       return;
     }
 
-    for (const especialidad of especialidades) {
+    const allTurnosSnap = await getDocs(collection(db, 'turnos'));
+    const existingKeys = new Set<string>();
 
-      const medicosEsp = medicos.filter(m => m.especialidad === especialidad);
-      if (medicosEsp.length === 0) continue;
+    let ultimaFecha: string | null = null;
 
-      let fechasGeneradas = 0;
-      let diasPasados = 0;
-      let offset = 0; // rotación de médicos
+    allTurnosSnap.docs.forEach(d => {
+      const data: any = d.data();
+      const key = `${data.fecha}|${data.hora}|${data.especialidad}`;
+      existingKeys.add(key);
 
-      const hoy = new Date();
+      if (!ultimaFecha || data.fecha > ultimaFecha) {
+        ultimaFecha = data.fecha; // string YYYY-MM-DD
+      }
+    });
 
-      while (fechasGeneradas < diasAGenerar) {
+    let fechaInicio: Date;
 
-        const fecha = new Date(hoy);
-        fecha.setDate(hoy.getDate() + diasPasados);
+    if (!ultimaFecha) {
+      fechaInicio = new Date();
+      fechaInicio.setDate(fechaInicio.getDate() + 1);
+    } else {
+      fechaInicio = new Date(ultimaFecha);
+      fechaInicio.setDate(fechaInicio.getDate() + 1);
+    }
 
-        const diaSemana = fecha.getDay();
-        if (diaSemana !== 0 && diaSemana !== 6) {
-          const fechaStr = fecha.toISOString().split("T")[0];
+    while (fechaInicio.getDay() === 0 || fechaInicio.getDay() === 6) {
+      fechaInicio.setDate(fechaInicio.getDate() + 1);
+    }
 
-          // CREA SOLO 6 TURNOS (uno por cada horario)
+    let diasGenerados = 0;
+    let offsetMedico = 0;
+
+    while (diasGenerados < diasAGenerar) {
+
+      const fecha = new Date(fechaInicio);
+
+      const fechaStr = fecha.toISOString().split('T')[0];
+      const diaSemana = fecha.getDay();
+
+      if (diaSemana !== 0 && diaSemana !== 6) {
+
+        const especialidad = especialidades[diasGenerados % especialidades.length];
+        const medicosEsp = medicos.filter(m => m.especialidad === especialidad);
+
+        if (medicosEsp.length) {
           for (let i = 0; i < horarios.length; i++) {
+            const hora = horarios[i];
+            const key = `${fechaStr}|${hora}|${especialidad}`;
 
-            const medico = medicosEsp[(offset + i) % medicosEsp.length];
+            if (existingKeys.has(key)) continue;
+
+            const medico = medicosEsp[(offsetMedico + i) % medicosEsp.length];
 
             const turno: Turno = {
               fecha: fechaStr,
-              hora: horarios[i],
+              hora,
               especialidad,
               estado: 'disponible',
               uidMedico: medico.uid
             };
 
             await addDoc(collection(db, 'turnos'), turno);
+            existingKeys.add(key);
           }
-
-          fechasGeneradas++;
-          offset++;
         }
 
-        diasPasados++;
+        diasGenerados++;
+        offsetMedico++;
+      }
+
+      fechaInicio.setDate(fechaInicio.getDate() + 1);
+
+      while (fechaInicio.getDay() === 0 || fechaInicio.getDay() === 6) {
+        fechaInicio.setDate(fechaInicio.getDate() + 1);
       }
     }
 
@@ -467,12 +500,21 @@ export class HomeComponent implements OnInit {
     this.turnos = turnosSnap2.docs.map(d => ({ id: d.id, ...d.data() })) as Turno[];
     this.turnosFiltrados = [...this.turnos];
 
+    Swal.close();
     Swal.fire('Éxito', 'Turnos generados correctamente.', 'success');
-  }
 
-  // ===========================
+  } catch (error) {
+    console.error(error);
+    Swal.close();
+    Swal.fire("Error", "Hubo un problema generando los turnos.", "error");
+
+  } finally {
+    this.cargandoTurnos = false;
+  }
+}
+
+
   // FILTROS
-  // ===========================
   filtrarTurnos() {
     this.turnosFiltrados = this.turnos.filter(t => {
       const matchFecha = !this.filtroFecha || t.fecha === this.filtroFecha;
@@ -502,9 +544,7 @@ export class HomeComponent implements OnInit {
     this.fechaSeleccionada = this.fechaSeleccionada === fecha ? null : fecha;
   }
 
-  // ===========================
   // CANCELAR TURNO
-  // ===========================
   async cancelarTurno(index: number) {
     const turno = this.misTurnos[index];
     if (!turno) return;

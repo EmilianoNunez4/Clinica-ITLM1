@@ -1,9 +1,8 @@
 <div *ngIf="!cargando && !cerrandoSesion && (!usuario || usuario.rol === 'paciente')">
 
-  <!-- NAV (visible para visitante y paciente) -->
-  <app-navbar></app-navbar>
+<app-navbar></app-navbar>
 
-  <!-- HERO / CARRUSEL (solo público/paciente) -->
+  <!-- HERO / CARRUSEL -->
   <div id="heroCarousel" class="carousel slide" data-bs-ride="carousel" aria-label="Hero carousel">
     <div class="carousel-inner">
 
@@ -18,11 +17,10 @@
               <h1 class="fw-bold pt-5">Atención médica confiable y cercana</h1>
               <p>En la Clínica ITLM te ofrecemos servicios de salud de calidad, con compromiso y un enfoque humano en cada consulta.</p>
 
-              <!-- 🔵 BOTÓN AÑADIDO -->
               <a routerLink="/turnos/solicitar" class="btn btn-primary btn-lg mt-0 rounded-pill px-4">
                 ¡Pedí tu turno acá!
               </a>
-              <!-- 🔵 FIN BOTÓN -->
+       
 
             </div>
           </div>
@@ -42,11 +40,9 @@
               <h1 class="fw-bold pt-5">Tu Salud<br>nuestra prioridad</h1>
               <p>Trabajamos para mejorar el bienestar de toda tu familia.</p>
 
-              <!-- 🔵 BOTÓN AÑADIDO -->
-              <a routerLink="/turnos/solicitar" class="btn btn-primary btn-lg mt-3 rounded-pill px-4">
+              <a routerLink="/paciente" class="btn btn-primary btn-lg mt-3 rounded-pill px-4">
                 Ver mis turnos
               </a>
-              <!-- 🔵 FIN BOTÓN -->
 
             </div>
           </div>
@@ -65,7 +61,7 @@
     </div>
   </div>
 
-  <!-- SECCIONES PÚBLICAS: Prestigio / Misión / Visión / Contacto -->
+  <!-- SECCIONES PÚBLICAS -->
   <section id="institucional" class="py-5 bg-light">
     <div class="container">
       <div class="row mb-5">
@@ -151,7 +147,6 @@
   </section>
 
   <!-- OBRAS SOCIALES -->
-  <!-- OBRAS SOCIALES -->
 <section class="obras-sociales py-5">
   <div class="container text-center">
     <h2 class="section-title">OBRAS SOCIALES</h2>
@@ -221,15 +216,11 @@
   </div>
 </section>
 
-
-  <!-- FOOTER para visitante y paciente -->
-  <app-footer></app-footer>
+<app-footer></app-footer>
 </div>
 
 
-<!-- ==========================
-     PANEL ADMIN (solo admin)
-========================== -->
+<!-- PANEL ADMIN -->
 <div *ngIf="!cargando && usuario?.rol === 'admin'" class="admin-layout">
   <aside class="admin-sidebar">
     <h2 class="logo">Panel Admin</h2>
@@ -331,6 +322,10 @@
       </div>
       
 
+<<<<<<< HEAD
+=======
+      <!-- filtros y lista de turnos -->
+>>>>>>> 10006bda942c107521cfb8ad864eb6b906fbad39
       <div class="filtros-turnos mb-3">
         <input type="text" placeholder="Buscar por especialidad..." [(ngModel)]="filtroEspecialidad" (input)="filtrarTurnos()" class="form-control mb-2" />
         <input type="date" [(ngModel)]="filtroFecha" (change)="filtrarTurnos()" class="form-control mb-2" />
@@ -378,6 +373,10 @@
   </main>
 </div>
 
+<<<<<<< HEAD
+=======
+<!-- SPINNER de carga -->
+>>>>>>> 10006bda942c107521cfb8ad864eb6b906fbad39
 <div *ngIf="cargando" class="spinner-container">
   <div class="spinner"></div>
   <p>Cargando perfil...</p>

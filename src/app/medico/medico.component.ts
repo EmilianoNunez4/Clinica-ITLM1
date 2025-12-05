@@ -183,7 +183,6 @@ export class MedicoComponent implements OnInit {
   async marcarAtendido(turno: Turno) {
     if (!turno?.id) return;
     const id = turno.id;
-
     this.removingTurnos.add(id);
     this.processingTurnos.add(id);
 

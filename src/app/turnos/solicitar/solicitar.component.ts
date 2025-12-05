@@ -23,9 +23,8 @@ export class SolicitarComponent implements OnInit {
   especialidades: string[] = [];
   misTurnos: any[] = [];
 
-  // 🔹 Paginación de turnos disponibles
-  pageSize: number = 20;       // cantidad de turnos por página
-  currentPage: number = 1;     // página actual
+  pageSize: number = 20;      
+  currentPage: number = 1;     
 
   get totalPages(): number {
     return this.filtrados.length
@@ -49,40 +48,29 @@ export class SolicitarComponent implements OnInit {
         return;
       }
 
-      // Obtener usuario actual desde Firestore
       const usuariosSnap = await getDocs(collection(db, 'usuarios'));
       const allUsers = usuariosSnap.docs.map((d) => d.data());
       this.usuario = allUsers.find((u) => u['email'] === user.email);
-
-      // Cargar turnos
       const turnosSnap = await getDocs(collection(db, 'turnos'));
       this.turnos = turnosSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
-
-      // Filtrar solo disponibles
       this.filtrados = this.turnos.filter((t) => t.estado === 'disponible');
-
-      // Turnos reservados por este paciente
       this.misTurnos = this.turnos.filter(
         (t) => t.paciente === this.usuario?.nombre
       );
 
-      // Especialidades únicas
       this.especialidades = Array.from(
         new Set(this.turnos.map((t) => t.especialidad))
       );
 
-      // 👇 Arrancamos siempre en la primera página
       this.currentPage = 1;
     });
   }
 
-  // 🔹 Ir a una página específica
   irAPagina(p: number) {
     if (p < 1 || p > this.totalPages) return;
     this.currentPage = p;
   }
 
-  // 🔹 Filtrar por especialidad
   filtrarPorEspecialidad(event: Event) {
     const select = event.target as HTMLSelectElement | null;
     const valor = select?.value || 'todos';
@@ -95,11 +83,9 @@ export class SolicitarComponent implements OnInit {
       );
     }
 
-    // 👇 Cada vez que filtrás, volvés a la página 1
     this.currentPage = 1;
   }
 
-  // 🔹 Reservar turno
   async reservarTurno(index: number) {
     const db = getFirestore();
     const turno = this.filtrados[index];
@@ -114,7 +100,6 @@ export class SolicitarComponent implements OnInit {
     try {
       const turnoRef = doc(db, 'turnos', turno.id);
 
-      // Si el turno no tiene uidMedico asignado, lo resolvemos
       let uidMedicoToAssign = turno.uidMedico || null;
       if (!uidMedicoToAssign) {
         const medicosSnap = await getDocs(
@@ -155,7 +140,6 @@ export class SolicitarComponent implements OnInit {
 
       await updateDoc(turnoRef, updatePayload);
 
-      // Actualizar local (MISMA LÓGICA)
       this.turnos = this.turnos.map((t) =>
         t.id === turno.id
           ? {
@@ -171,7 +155,6 @@ export class SolicitarComponent implements OnInit {
         (t) => t.paciente === this.usuario.nombre
       );
 
-      // Ajustar página actual (por si quedó fuera de rango)
       this.currentPage = Math.min(this.currentPage, this.totalPages);
 
       alert('✅ Turno reservado correctamente');
@@ -181,7 +164,6 @@ export class SolicitarComponent implements OnInit {
     }
   }
 
-  // 🔹 Cancelar turno
   async cancelarTurno(index: number) {
     const db = getFirestore();
     const t = this.misTurnos[index];
@@ -192,14 +174,11 @@ export class SolicitarComponent implements OnInit {
       const turnoRef = doc(db, 'turnos', t.id);
       await updateDoc(turnoRef, { estado: 'disponible', paciente: null });
 
-      // Actualizar local (MISMA LÓGICA)
       this.misTurnos.splice(index, 1);
       this.turnos = this.turnos.map((x) =>
         x.id === t.id ? { ...x, estado: 'disponible', paciente: null } : x
       );
       this.filtrados = this.turnos.filter((x) => x.estado === 'disponible');
-
-      // Ajustar página
       this.currentPage = Math.min(this.currentPage, this.totalPages);
 
       alert('🟢 Turno cancelado correctamente');
