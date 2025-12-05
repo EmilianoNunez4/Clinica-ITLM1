@@ -84,6 +84,7 @@ turnosPasados: any[] | null = null;
       ...d.data()
     })) as Turno[];
 
+    
     const misTurnos = todos.filter(t => t.paciente === this.nombre);
 
     this.turnosFuturos = misTurnos.filter(
@@ -103,6 +104,7 @@ turnosPasados: any[] | null = null;
 
     const turnosRef = collection(this.firestore, 'turnos');
     const snapshot = await getDocs(turnosRef);
+
 
     const disponibles = snapshot.docs
       .map(d => ({ id: d.id, ...d.data() as any }))
@@ -137,6 +139,7 @@ turnosPasados: any[] | null = null;
     await updateDoc(turnoRef, { estado: 'disponible', paciente: null });
     await this.cargarTurnos();
   }
+
   // ================= CERRAR SESIÓN =================
   cerrarSesion(): void {
     const auth = getAuth();
