@@ -16,6 +16,7 @@ interface Turno {
   estado: string;
   paciente?: string | null;
   uidMedico?: string;
+  observacion?: string;
 }
 
 @Component({
@@ -79,11 +80,14 @@ export class HomeComponent implements OnInit {
 
       // USUARIOS
       const usuariosSnap = await getDocs(collection(db, 'usuarios'));
+      console.log('Usuarios en colección usuarios:', usuariosSnap.docs.length);  // 👈 LOG
       // 👇 Guardamos también el uid del documento
       this.usuarios = usuariosSnap.docs.map(d => ({
         uid: d.id,
         ...d.data()
       }));
+      console.log('Lista de UIDs:', this.usuarios.map(u => u.uid));              // 👈 LOG
+
       this.usuariosFiltrados = [...this.usuarios];
 
       // ESPECIALIDADES ÚNICAS

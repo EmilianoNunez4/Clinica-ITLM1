@@ -288,7 +288,7 @@
             <tr *ngFor="let u of usuariosFiltrados; let i = index">
               <td>{{ u.nombre }}</td>
               <td>{{ u.email }}</td>
-              <td>{{ u.dni || 'N/A' }}</td>
+              <td>{{ u.dni || 'no especificado' }}</td>
               <td>{{ u.rol }}</td>
               <td>
               <ng-container *ngIf="u.rol === 'medico'; else noEsMedico">

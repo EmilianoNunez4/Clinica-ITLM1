@@ -12,6 +12,8 @@ import { Auth } from '@angular/fire/auth';
 import { getAuth, signOut, onAuthStateChanged, User } from 'firebase/auth';
 import { Timestamp } from 'firebase/firestore';
 import { Router } from '@angular/router';
+import Swal from 'sweetalert2';
+
 
 interface Turno {
   id: string;
@@ -181,31 +183,86 @@ export class MedicoComponent implements OnInit {
   }
 
   async marcarAtendido(turno: Turno) {
-    if (!turno?.id) return;
-    const id = turno.id;
-    this.removingTurnos.add(id);
-    this.processingTurnos.add(id);
+  console.log("Botón de marcar como atendido clickeado");  // Agregar este log
+  if (!turno?.id) return;
 
-    setTimeout(async () => {
-      try {
-        const turnoRef = doc(this.firestore, 'turnos', id);
-        await updateDoc(turnoRef, { estado: 'atendido' });
-
-        this.turnosActivos = this.turnosActivos.filter(t => t.id !== id);
-        const atendido = { ...turno, estado: 'atendido' } as Turno;
-
-        this.turnosAtendidos = [atendido, ...this.turnosAtendidos].sort((a, b) => {
-          const f = a.fecha.localeCompare(b.fecha);
-          return f !== 0 ? f : a.hora.localeCompare(b.hora);
-        });
-      } catch (err) {
-        console.error('Error marcando turno como atendido', err);
-      } finally {
-        this.removingTurnos.delete(id);
-        this.processingTurnos.delete(id);
-      }
-    }, 360);
+  if (turno.estado !== 'reservado') {
+    await Swal.fire({
+      icon: 'info',
+      title: 'No se puede marcar como atendido',
+      text: 'Solo los turnos reservados pueden marcarse como atendidos.',
+      confirmButtonColor: '#00509e',
+    });
+    return;
   }
+
+  const { value: obs, isConfirmed } = await Swal.fire({
+    title: 'Cerrar consulta',
+    text: 'Podés dejar una observación sobre la consulta (opcional).',
+    input: 'textarea',
+    inputValue: turno.observacion || '',
+    inputPlaceholder: 'Escribí aquí notas sobre la consulta...',
+    inputAttributes: {
+      'aria-label': 'Escribí aquí notas sobre la consulta'
+    },
+    showCancelButton: true,
+    confirmButtonText: 'Marcar como atendido',
+    cancelButtonText: 'Cancelar',
+    confirmButtonColor: '#0d6efd',
+    cancelButtonColor: '#6c757d',
+    width: 600
+  });
+
+  if (!isConfirmed) return;
+
+  const id = turno.id;
+
+  this.removingTurnos.add(id);
+  this.processingTurnos.add(id);
+
+  setTimeout(async () => {
+    try {
+      const turnoRef = doc(this.firestore, 'turnos', id);
+
+      await updateDoc(turnoRef, {
+        estado: 'atendido',
+        observacion: obs || ''
+      });
+
+      this.turnosActivos = this.turnosActivos.filter(t => t.id !== id);
+
+      const atendido: Turno = {
+        ...turno,
+        estado: 'atendido',
+        observacion: obs || ''
+      };
+
+      this.turnosAtendidos = [atendido, ...this.turnosAtendidos].sort((a, b) => {
+        const fechaCmp = a.fecha.localeCompare(b.fecha);
+        return fechaCmp !== 0 ? fechaCmp : a.hora.localeCompare(b.hora);
+      });
+
+      await Swal.fire({
+        icon: 'success',
+        title: 'Turno marcado como atendido',
+        timer: 1300,
+        showConfirmButton: false
+      });
+
+    } catch (err) {
+      console.error('Error marcando turno como atendido', err);
+      await Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'No se pudo marcar el turno como atendido.',
+        confirmButtonColor: '#b00020',
+      });
+    } finally {
+      this.removingTurnos.delete(id);
+      this.processingTurnos.delete(id);
+    }
+  }, 360);
+}
 
   async cancelarTurnoMedico(turno: Turno) {
   if (!turno?.id) return;
@@ -229,21 +286,6 @@ export class MedicoComponent implements OnInit {
     console.error('Error al cancelar turno desde médico:', err);
   }
 
-}
-
-async guardarObservacion(turno: Turno) {
-  if (!turno?.id) return;
-
-  try {
-    const turnoRef = doc(this.firestore, 'turnos', turno.id);
-    await updateDoc(turnoRef, {
-      observacion: turno.observacion ?? ''
-    });
-
-    console.log('Observación guardada para turno', turno.id);
-  } catch (err) {
-    console.error('Error al guardar observación:', err);
-  }
 }
 
   cerrarSesion() {

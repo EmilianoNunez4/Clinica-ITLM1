@@ -6,12 +6,12 @@ import { getAuth } from 'firebase/auth';
 export const environment = {
   production: true,
   firebaseConfig : {
- apiKey: "AIzaSyBrEBb8px0aA3sTmertjhOlhNn1ZQoNl3s",
-  authDomain: "clinica-itlm2.firebaseapp.com",
-  projectId: "clinica-itlm2",
-  storageBucket: "clinica-itlm2.firebasestorage.app",
-  messagingSenderId: "562917297352",
-  appId: "1:562917297352:web:a9dad380cf656aebb5e9fd"
+  apiKey: "AIzaSyCDceUm91JC7aDQ4HJ4cinRwN5ZiQwa9Ao",
+  authDomain: "clinicaitlm-a88a7.firebaseapp.com",
+  projectId: "clinicaitlm-a88a7",
+  storageBucket: "clinicaitlm-a88a7.firebasestorage.app",
+  messagingSenderId: "618058524214",
+  appId: "1:618058524214:web:399c75a2cd948e9cc21a97"
   }
 };
 

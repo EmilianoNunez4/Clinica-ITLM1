@@ -80,20 +80,12 @@
 
               <div class="turno-actions">
 
-                <div class="turno-nota">
-                  <label class="nota-label">Observaciones</label>
-                  <textarea class="nota-textarea" [(ngModel)]="turno.observacion" placeholder="Escribí aquí notas sobre la consulta..." rows="2"></textarea>
-
-                  <button type="button" class="btn-accion btn-guardar-nota" (click)="guardarObservacion(turno)"> Guardar nota </button>
-                </div>
-
                 <button *ngIf="turno.estado === 'reservado'" type="button" class="btn-accion btn-cancelar" (click)="cancelarTurnoMedico(turno)"> Cancelar turno
                 </button>
 
                 <button *ngIf="turno.estado !== 'atendido'" type="button" class="btn-accion btn-attend" (click)="marcarAtendido(turno)" [disabled]="!turno.nombrePaciente">
                   Marcar como Atendido
                 </button>
-
               </div>
             </article>
 
@@ -156,11 +148,11 @@
                   <div class="label">Estado</div>
                   <div class="value estado-atendido">{{ turno.estado }}</div>
                 </div>
-
-                <!-- 🔹 Mostrar Observaciones si hay -->
-                <div class="turno-item" *ngIf="turno.observacion">
+                <div class="turno-item">
                   <div class="label">Observaciones</div>
-                  <div class="value">{{ turno.observacion }}</div>
+                  <div class="value">
+                    {{ turno.observacion && turno.observacion.trim() ? turno.observacion : 'Sin observaciones' }}
+                  </div>
                 </div>
               </div>
             </article>
